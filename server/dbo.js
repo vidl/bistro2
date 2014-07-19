@@ -16,8 +16,10 @@ module.exports = function(db){
                 chf: Number,
                 eur: Number
             },
-            limit: { type: Schema.Types.ObjectId, ref: 'Limit' },
-            limitDec: Number,
+            limits: [{
+                dec: Number,
+                limit: { type: Schema.Types.ObjectId, ref: 'Limit' }
+            }],
             kitchen: Boolean,
             active: Boolean,
             group: String
@@ -25,13 +27,7 @@ module.exports = function(db){
         order: new Schema({
             no: Number,
             currency: String,
-            articles: [{
-                name: String,
-                receipt: String,
-                price: Number,
-                ordered: Number,
-                kitchen: Boolean
-            }],
+            articles: [{ type: Schema.Types.ObjectId, ref: 'Article' } ],
             total: Number,
             kitchen: Boolean
         }),

@@ -10,14 +10,16 @@
     "body-parser": "^1.4.3",
     "method-override": "^2.0.2",
     "underscore": "^1.6.0",
-    "q": "^1.0.1",
+    "q": "^1.0.1"
   },
   "devDependencies": {
     "mongodb": "^1.4.7",
     "mocha": "*",
     "chai": "*",
     "supertest": "*",
-    "supertest-as-promised": "*"
+    "supertest-as-promised": "*",
+    "pow-mongodb-fixtures": "^0.10.0"
+
   },
   "engine": "node >= 0.6.6"
 }

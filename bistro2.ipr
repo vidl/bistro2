@@ -25,6 +25,9 @@
   </component>
   <component name="Encoding" useUTFGuessing="true" native2AsciiForPropertiesFiles="false" />
   <component name="IdProvider" IDEtalkID="952FE33D8A03B23D2F6E662087149040" />
+  <component name="JavaScriptLibraryMappings">
+    <file url="file://$PROJECT_DIR$" libraries="{bistro2 node_modules}" />
+  </component>
   <component name="Palette2">
     <group name="Swing">
       <item class="com.intellij.uiDesigner.HSpacer" tooltip-text="Horizontal Spacer" icon="/com/intellij/uiDesigner/icons/hspacer.png" removable="false" auto-create-binding="false" can-attach-label="false">
@@ -157,21 +160,20 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="" vcs="" />
   </component>
-  <component name="masterDetails">
-    <states>
-      <state key="ProjectJDKs.UI">
-        <settings>
-          <last-edited>1.6</last-edited>
-          <splitter-proportions>
-            <option name="proportions">
-              <list>
-                <option value="0.2" />
-              </list>
-            </option>
-          </splitter-proportions>
-        </settings>
-      </state>
-    </states>
+  <component name="libraryTable">
+    <library name="bistro2 node_modules" type="javaScript">
+      <properties>
+        <option name="frameworkName" value="node_modules" />
+        <sourceFilesUrls>
+          <item url="file://$PROJECT_DIR$/node_modules" />
+        </sourceFilesUrls>
+      </properties>
+      <CLASSES>
+        <root url="file://$PROJECT_DIR$/node_modules" />
+      </CLASSES>
+      <JAVADOC />
+      <SOURCES />
+    </library>
   </component>
 </project>
 
