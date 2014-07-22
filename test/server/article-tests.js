@@ -123,8 +123,7 @@ describe('articles access', function() {
                 res.body.should.have.a.deep.property('price.chf', 5.4);
                 res.body.should.have.a.deep.property('price.eur', 4);
             })
-            .catch(done)
-            .done(done);
+            .done(done, done);
         });
     });
 
@@ -154,8 +153,7 @@ describe('articles access', function() {
                     })
                     .expect(200);
             })
-            .catch(done)
-            .done(done);
+            .done(done, done);
        });
     });
 
