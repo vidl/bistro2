@@ -27,7 +27,10 @@ module.exports = function(db){
         order: new Schema({
             no: Number,
             currency: String,
-            articles: [{ type: Schema.Types.ObjectId, ref: 'Article' } ],
+            articles: [{
+                count: Number,
+                article: { type: Schema.Types.ObjectId, ref: 'Article' }
+            }],
             total: Number,
             kitchen: Boolean
         }),
@@ -37,12 +40,30 @@ module.exports = function(db){
         })
     };
 
+
     var model = {
         setting: mongoose.model('Setting', schema.setting, 'settings'),
         article: mongoose.model('Article', schema.article, 'articles'),
         order: mongoose.model('Order', schema.order, 'orders'),
         limit: mongoose.model('Limit', schema.limit, 'limits')
     };
+
+    schema.order.pre('save', function(next){
+        var doc = this;
+        if (doc.isNew){
+            model.order.count(function(err, count){
+                if (err) throw err;
+                doc.no = count + 1;
+                next();
+            });
+        }
+    });
+    schema.order.post('init', function(next){
+       var doc = this;
+       doc.populate({ path: 'articles.article', select: 'price'}, function(err){
+           if (err) throw err;
+       })
+    });
 
     mongoose.connect(db);
     // CONNECTION EVENTS

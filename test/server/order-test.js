@@ -29,6 +29,16 @@ describe('orders access', function() {
             limits: [ { dec: 1, limit: fixtures.limits.limit1.__id } ],
             kitchen: true,
             active: true
+        },
+        article2: {
+            _id: id(),
+            name: 'article2',
+            price: {
+                chf: 2.4,
+                eur: 2
+            },
+            kitchen: true,
+            active: true
         }
     };
 
@@ -65,9 +75,12 @@ describe('orders access', function() {
         var order = {
             _id: 'shouldnotmatter',
             currency: 'chf',
-            articles: [ fixtures.articles.article1._id]
+            articles: [{
+                count: 1,
+                article: fixtures.articles.article1._id
+            }]
         };
-        it('should add an order', function(done){
+        it('should add an order with order no 1', function(done){
             request(app)
                 .post(paths.orders)
                 .type('json')
@@ -75,6 +88,7 @@ describe('orders access', function() {
                 .expect(function(res){
                     res.body.should.be.an('object');
                     res.body.should.have.a.property('_id').that.is.a('string');
+                    res.body.should.have.a.property('no', 1);
                     res.body.should.have.a.property('currency', order.currency);
                     res.body.should.have.a.property('articles').that.is.an('array');
                 })
@@ -85,6 +99,7 @@ describe('orders access', function() {
                         .expect(function(res){
                             res.body.should.be.an('object');
                             res.body.should.have.a.property('_id').that.is.a('string');
+                            res.body.should.have.a.property('no', 1);
                             res.body.should.have.a.property('currency', order.currency);
                             res.body.should.have.a.property('articles').that.is.an('array');
                         })
@@ -98,6 +113,7 @@ describe('orders access', function() {
                             res.body.should.be.an('array').with.length(1);
                             res.body[0].should.be.an('object');
                             res.body[0].should.have.a.property('_id', oldRes.body._id);
+                            res.body[0].should.have.a.property('no', 1);
                             res.body[0].should.have.a.property('currency', order.currency);
                             res.body[0].should.have.a.property('articles').that.is.an('array');
                         })
@@ -108,6 +124,35 @@ describe('orders access', function() {
                         .get(paths.ordersCount)
                         .expect(200)
                         .expect({count: 1});
+                })
+                .catch(done)
+                .done(done);
+        });
+        it('should increment the order number on every new order', function(done){
+            var order = {
+                currency: 'eur',
+                articles: [
+                    { count: 1, article: fixtures.articles.article1._id},
+                    { count: 2, article: fixtures.articles.article2._id}
+                ]
+            };
+            request(app)
+                .post(paths.orders)
+                .type('json')
+                .send(order)
+                .expect(function(res){
+                    res.body.should.be.an('object');
+                    res.body.should.have.a.property('_id').that.is.a('string');
+                    res.body.should.have.a.property('no', 2);
+                    res.body.should.have.a.property('currency', order.currency);
+                    res.body.should.have.a.property('articles').that.is.an('array');
+                })
+                .expect(200)
+                .then(function(){
+                    request(app)
+                        .get(paths.ordersCount)
+                        .expect(200)
+                        .expect({count: 2});
                 })
                 .catch(done)
                 .done(done);
