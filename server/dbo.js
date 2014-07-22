@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var restify = require('express-restify-mongoose');
+var _ = require('underscore');
 
 module.exports = function(db){
 
@@ -31,7 +32,10 @@ module.exports = function(db){
                 count: Number,
                 article: { type: Schema.Types.ObjectId, ref: 'Article' }
             }],
-            total: Number,
+            total: {
+                chf: Number,
+                eur: Number
+            },
             kitchen: Boolean
         }),
         limit: new Schema({
@@ -50,19 +54,27 @@ module.exports = function(db){
 
     schema.order.pre('save', function(next){
         var doc = this;
+        var updateTotal = function(){
+            doc.populate({ path: 'articles.article', select: 'price'}, function(err, order){
+                if (err) throw err;
+                doc.total.chf = 0;
+                doc.total.eur = 0;
+                _.each(order.articles, function(orderItem){
+                    doc.total.chf += orderItem.article.price.chf * orderItem.count;
+                    doc.total.eur += orderItem.article.price.eur * orderItem.count;
+                });
+                next();
+            });
+        };
         if (doc.isNew){
             model.order.count(function(err, count){
                 if (err) throw err;
                 doc.no = count + 1;
-                next();
+                updateTotal();
             });
+        } else {
+            updateTotal();
         }
-    });
-    schema.order.post('init', function(next){
-       var doc = this;
-       doc.populate({ path: 'articles.article', select: 'price'}, function(err){
-           if (err) throw err;
-       })
     });
 
     mongoose.connect(db);
@@ -94,8 +106,13 @@ module.exports = function(db){
         addRestRoutes: function(app){
             restify.serve(app, model.setting);
             restify.serve(app, model.article);
-            restify.serve(app, model.order);
+            restify.serve(app, model.order, {
+                prereq: function(req){
+                  return req.method === 'GET' || req.method === 'DELETE';
+                }
+            });
             restify.serve(app, model.limit);
-        }
+        },
+        model: model
     }
 };

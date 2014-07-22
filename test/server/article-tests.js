@@ -33,13 +33,13 @@ describe('articles access', function() {
                 .expect(function(res){
                     res.body.should.be.an('array').with.length(0);
                 })
-                .end(done);
+                .expect(200, done);
         });
         it('should have zero count', function(done){
             request(app)
                 .get(paths.articlesCount)
                 .expect({count: 0})
-                .end(done);
+                .expect(200, done);
         });
     });
 
@@ -91,11 +91,10 @@ describe('articles access', function() {
             .then(function(){
                 request(app)
                     .get(paths.articlesCount)
-                    .expect(200)
-                    .expect({count: 1});
+                    .expect({count: 1})
+                    .expect(200, done);
             })
-            .catch(done)
-            .done(done);
+            .catch(done);
         });
     });
 
@@ -104,26 +103,27 @@ describe('articles access', function() {
             request(app)
                 .get(paths.articles)
                 .accept('json')
-            .then(function(res){
-                res.body.should.be.an('array').with.length(1);
-                res.body[0].should.have.a.property('name', 'Test-article1');
-                res.body[0].should.have.a.deep.property('price.chf', 5.4);
-                res.body[0].should.have.a.deep.property('price.eur', 4);
-                return request(app)
+                .expect(function(res) {
+                    res.body.should.be.an('array').with.length(1);
+                    res.body[0].should.have.a.property('name', 'Test-article1');
+                    res.body[0].should.have.a.deep.property('price.chf', 5.4);
+                    res.body[0].should.have.a.deep.property('price.eur', 4);
+                })
+            .then(function(res) {
+                request(app)
                     .put(paths.articles + '/' + res.body[0]._id)
                     .type('json')
                     .send({name: 'blabla'})
-                    .expect(200);
-
+                    .expect(function (res) {
+                        res.body.should.be.an('object');
+                        res.body.should.have.a.property('_id').that.is.a('string');
+                        res.body.should.have.a.property('name', 'blabla');
+                        res.body.should.have.a.deep.property('price.chf', 5.4);
+                        res.body.should.have.a.deep.property('price.eur', 4);
+                    })
+                    .expect(200, done);
             })
-            .then(function(res){
-                res.body.should.be.an('object');
-                res.body.should.have.a.property('_id').that.is.a('string');
-                res.body.should.have.a.property('name', 'blabla');
-                res.body.should.have.a.deep.property('price.chf', 5.4);
-                res.body.should.have.a.deep.property('price.eur', 4);
-            })
-            .done(done, done);
+            .catch(done);
         });
     });
 
@@ -151,9 +151,9 @@ describe('articles access', function() {
                     .expect(function(res){
                         res.body.should.be.an('array').with.length(0);
                     })
-                    .expect(200);
+                    .expect(200, done);
             })
-            .done(done, done);
+            .catch(done);
        });
     });
 

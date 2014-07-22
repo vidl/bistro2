@@ -5,11 +5,21 @@ var testBistro = require('./helpers/test-bistro.js');
 
 chai.use(require('./helpers/chai.js'));
 
+function dn(done){
+    return function(err){
+        if (err)done(err);
+        done();
+    };
+}
+
 describe('orders access', function() {
 
     var paths = {
         orders: '/api/v1/orders',
-        ordersCount: '/api/v1/orders/count'
+        ordersCount: '/api/v1/orders/count',
+        order: '/order',
+        orderInc: '/order/inc',
+        orderDec: '/order/dec'
     };
     var app = testBistro.app;
 
@@ -59,103 +69,115 @@ describe('orders access', function() {
                 .get(paths.orders)
                 .accept('json')
                 .expect(function(res){
-                    res.body.should.be.an('array').with.length(0);
+                    res.body.should.be.an('array').and.empty;
                 })
-                .end(done);
+                .expect(200, done);
         });
         it('should have zero count', function(done){
             request(app)
                 .get(paths.ordersCount)
                 .expect({count: 0})
-                .end(done);
+                .expect(200, done);
         });
     });
 
     describe('post /orders', function(){
-        var order = {
-            _id: 'shouldnotmatter',
-            currency: 'chf',
-            articles: [{
-                count: 1,
-                article: fixtures.articles.article1._id
-            }]
-        };
-        it('should add an order with order no 1', function(done){
+        it('is not allowed', function(done){
             request(app)
                 .post(paths.orders)
                 .type('json')
-                .send(order)
+                .send({doesNotMatter: 1})
+                .expect(403, done);
+        });
+    });
+
+    describe('put /orders', function(){
+        it('is not allowed', function(done){
+            request(app)
+                .put(paths.orders + '/anid')
+                .expect(403, done);
+        });
+    });
+
+    describe('/order', function(){
+        var serverSession = request.agent(app);
+        it('returns an empty order on get', function(done){
+            serverSession.get(paths.order)
+                .set('Accept', 'application/json')
+                .expect('Content-Type', /json/)
                 .expect(function(res){
                     res.body.should.be.an('object');
                     res.body.should.have.a.property('_id').that.is.a('string');
                     res.body.should.have.a.property('no', 1);
-                    res.body.should.have.a.property('currency', order.currency);
-                    res.body.should.have.a.property('articles').that.is.an('array');
+                    res.body.should.have.a.property('articles').that.is.an('array').and.empty;
                 })
+                .expect(200, done);
+        });
+        it('can add an article using put on /order/inc', function(done){
+           serverSession.put(paths.orderInc)
+               .send({article : fixtures.articles.article1._id})
+               .expect(function(res){
+                   res.body.should.have.a.property('no', 1);
+                   res.body.should.have.a.property('articles');
+                   res.body.articles.should.be.an('array').with.lengthOf(1);
+                   res.body.should.have.a.deep.property('articles.0.count', 1);
+                   res.body.should.have.a.deep.property('articles.0.article._id', fixtures.articles.article1._id.toHexString());
+                   res.body.should.have.a.deep.property('total.chf', 1.2);
+                   res.body.should.have.a.deep.property('total.eur', 1);
+               })
+               .expect(200, done);
+        });
+        /*it('returns the same order until committed', function(done){
+            serverSession.get(paths.order)
+                .set('Accept', 'application/json')
                 .expect(200)
                 .then(function(oldRes){
-                    return request(app)
-                        .get(paths.orders + '/' + oldRes.body._id)
+                    return serverSession
+                        .put(paths.orders + '/' + oldRes.body._id)
+                        .type('json')
+                        .send({
+                            articles:  [
+                                { count: 1, article: fixtures.articles.article1._id},
+                                { count: 2, article: fixtures.articles.article2._id}
+                            ],
+                            total: 3.5
+                        })
+                        .expect(200);
+                })
+                .then(function(oldRes){
+                    return serverSession.get(paths.order)
                         .expect(function(res){
-                            res.body.should.be.an('object');
-                            res.body.should.have.a.property('_id').that.is.a('string');
+                            res.body.should.have.a.property('_id', oldRes.body._id);
                             res.body.should.have.a.property('no', 1);
-                            res.body.should.have.a.property('currency', order.currency);
-                            res.body.should.have.a.property('articles').that.is.an('array');
+                            res.body.should.have.a.property('articles');
+                            res.body.articles.should.be.an('array').with.length(2);
+                            res.body.should.have.a.property('total', 3.5);
                         })
                         .expect(200);
                 })
-                .then(function(oldRes){
-                    return request(app)
-                        .get(paths.orders)
-                        .accept('json')
+                .then(function(){
+                    return serverSession.post(paths.order)
+                        .send({ currency: 'chf', noPrint: true })
+                        .expect(200)
                         .expect(function(res){
-                            res.body.should.be.an('array').with.length(1);
-                            res.body[0].should.be.an('object');
-                            res.body[0].should.have.a.property('_id', oldRes.body._id);
-                            res.body[0].should.have.a.property('no', 1);
-                            res.body[0].should.have.a.property('currency', order.currency);
-                            res.body[0].should.have.a.property('articles').that.is.an('array');
+                            res.body.should.have.a.property('no', 1);
+                            res.body.should.have.a.property('currency', 'chf');
+                            res.body.should.have.a.property('articles').with.lengthOf(2);
+                            res.body.should.have.a.property('total', 3.5);
+                        });
+                })
+                .then(function(){
+                    serverSession.get(paths.order)
+                        .expect(function(res){
+                            res.body.should.have.a.property('no', 2);
+                            res.body.should.have.a.property('articles').that.is.empty;
                         })
-                        .expect(200);
+                        .expect(200, done);
                 })
-                .then(function(){
-                    request(app)
-                        .get(paths.ordersCount)
-                        .expect(200)
-                        .expect({count: 1});
-                })
-                .catch(done)
-                .done(done);
-        });
-        it('should increment the order number on every new order', function(done){
-            var order = {
-                currency: 'eur',
-                articles: [
-                    { count: 1, article: fixtures.articles.article1._id},
-                    { count: 2, article: fixtures.articles.article2._id}
-                ]
-            };
-            request(app)
-                .post(paths.orders)
-                .type('json')
-                .send(order)
-                .expect(function(res){
-                    res.body.should.be.an('object');
-                    res.body.should.have.a.property('_id').that.is.a('string');
-                    res.body.should.have.a.property('no', 2);
-                    res.body.should.have.a.property('currency', order.currency);
-                    res.body.should.have.a.property('articles').that.is.an('array');
-                })
-                .expect(200)
-                .then(function(){
-                    request(app)
-                        .get(paths.ordersCount)
-                        .expect(200)
-                        .expect({count: 2});
-                })
-                .catch(done)
-                .done(done);
-        });
+                .catch(done);
+
+        });*/
+
     });
+
 });
