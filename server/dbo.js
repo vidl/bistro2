@@ -30,7 +30,7 @@ module.exports = function(db){
         order: new Schema({
             no: Number,
             currency: { type: String, enum: ['chf', 'eur']},
-            articles: [{
+            items: [{
                 count: numberMin0Type,
                 article: { type: Schema.Types.ObjectId, ref: 'Article' }
             }],
@@ -57,20 +57,20 @@ module.exports = function(db){
     schema.order.pre('save', function(next){
         var doc = this;
         var removeZeroOrderItems = function(){
-            _.each(doc.articles, function(orderItem){
-                if (orderItem.count == 0){
-                    orderItem.remove();
+            _.each(doc.items, function(item){
+                if (item.count == 0){
+                    item.remove();
                 }
             });
         };
         var updateTotal = function(){
-            doc.populate({ path: 'articles.article', select: 'price'}, function(err, order){
+            doc.populate({ path: 'items.article', select: 'price'}, function(err, order){
                 if (err) throw err;
                 doc.total.chf = 0;
                 doc.total.eur = 0;
-                _.each(order.articles, function(orderItem){
-                    doc.total.chf += orderItem.article.price.chf * orderItem.count;
-                    doc.total.eur += orderItem.article.price.eur * orderItem.count;
+                _.each(order.items, function(item){
+                    doc.total.chf += item.article.price.chf * item.count;
+                    doc.total.eur += item.article.price.eur * item.count;
                 });
                 next();
             });

@@ -40,12 +40,12 @@ function addToBody(res){
 }
 
 function incArticle(order, articleId, incAmount){
-    var article = _.find(order.articles, function(article){
-        return article.article.equals(articleId);
+    var article = _.find(order.items, function(item){
+        return item.article.equals(articleId);
     });
     if (article == undefined){
         article = { count: incAmount, article: articleId};
-        order.articles.push(article);
+        order.items.push(article);
     } else {
         article.count += incAmount;
     }
@@ -105,15 +105,15 @@ module.exports = function(dbConnection) {
                 total[limit._id.toHexString()] = { used: 0, total: limit.available};
             });
             return dataService.model.order.find({})
-                .populate({path: 'articles.article', select: 'limits'})
+                .populate({path: 'items.article', select: 'limits'})
                 .exec();
         })
         .then(function(orders){
             _.each(orders, function(order){
-                _.each(order.articles, function(orderItem){
-                    _.each(orderItem.article.limits, function(articleLimit){
+                _.each(order.items, function(item){
+                    _.each(item.article.limits, function(articleLimit){
                         var limitId = articleLimit.limit.toHexString();
-                        total[limitId].used += articleLimit.dec * orderItem.count;
+                        total[limitId].used += articleLimit.dec * item.count;
                     });
                 });
             });
