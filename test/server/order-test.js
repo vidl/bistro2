@@ -115,6 +115,7 @@ describe('orders access', function() {
                 .expect(function(res){
                     res.body.should.have.a.property('no', 1);
                     res.body.should.have.a.property('articles');
+                    res.body.should.not.have.a.property('currency');
                     res.body.articles.should.be.an('array').with.lengthOf(1);
                     res.body.articles[0].should.have.a.property('count', 1);
                     res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
@@ -128,6 +129,7 @@ describe('orders access', function() {
                         .expect(function (res) {
                             res.body.should.have.a.property('no', 1);
                             res.body.should.have.a.property('articles');
+                            res.body.should.not.have.a.property('currency');
                             res.body.articles.should.be.an('array').with.lengthOf(1);
                             res.body.articles[0].should.have.a.property('count', 2);
                             res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
@@ -143,6 +145,7 @@ describe('orders access', function() {
                         .expect(function (res) {
                             res.body.should.have.a.property('no', 1);
                             res.body.should.have.a.property('articles');
+                            res.body.should.not.have.a.property('currency');
                             res.body.articles.should.be.an('array').with.lengthOf(2);
                             res.body.articles[0].should.have.a.property('count', 2);
                             res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
@@ -163,6 +166,7 @@ describe('orders access', function() {
                 .expect(function(res){
                     res.body.should.have.a.property('no', 1);
                     res.body.should.have.a.property('articles');
+                    res.body.should.not.have.a.property('currency');
                     res.body.articles.should.be.an('array').with.lengthOf(1);
                     res.body.articles[0].should.have.a.property('count', 2);
                     res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
@@ -184,56 +188,35 @@ describe('orders access', function() {
                 .done(noErr(done),done);
 
         });
-        /*it('returns the same order until committed', function(done){
-            serverSession.get(paths.order)
-                .set('Accept', 'application/json')
-                .expect(200)
-                .then(function(oldRes){
-                    return serverSession
-                        .put(paths.orders + '/' + oldRes.body._id)
-                        .type('json')
-                        .send({
-                            articles:  [
-                                { count: 1, article: fixtures.articles.article1._id},
-                                { count: 2, article: fixtures.articles.article2._id}
-                            ],
-                            total: 3.5
-                        })
-                        .expect(200);
-                })
-                .then(function(oldRes){
-                    return serverSession.get(paths.order)
-                        .expect(function(res){
-                            res.body.should.have.a.property('_id', oldRes.body._id);
-                            res.body.should.have.a.property('no', 1);
-                            res.body.should.have.a.property('articles');
-                            res.body.articles.should.be.an('array').with.length(2);
-                            res.body.should.have.a.property('total', 3.5);
-                        })
-                        .expect(200);
-                })
-                .then(function(){
-                    return serverSession.post(paths.order)
-                        .send({ currency: 'chf', noPrint: true })
-                        .expect(200)
-                        .expect(function(res){
-                            res.body.should.have.a.property('no', 1);
-                            res.body.should.have.a.property('currency', 'chf');
-                            res.body.should.have.a.property('articles').with.lengthOf(2);
-                            res.body.should.have.a.property('total', 3.5);
-                        });
-                })
-                .then(function(){
-                    serverSession.get(paths.order)
-                        .expect(function(res){
-                            res.body.should.have.a.property('no', 2);
-                            res.body.should.have.a.property('articles').that.is.empty;
-                        })
-                        .expect(200, done);
-                })
-                .catch(done);
 
-        });*/
+        it('can commit an order using post', function(done){
+           serverSession.post(paths.order)
+               .send({currency: 'chf'})
+               .expect(function(res){
+                   res.body.should.have.a.property('no', 1);
+                   res.body.should.have.a.property('articles');
+                   res.body.articles.should.be.an('array').with.lengthOf(1);
+                   res.body.articles[0].should.have.a.property('count', 2);
+                   res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                   res.body.should.have.a.deep.property('total.chf', 2.4);
+                   res.body.should.have.a.deep.property('total.eur', 2);
+                   res.body.should.have.a.property('currency', 'chf');
+
+               })
+               .expect(200)
+               .then(function(){
+                   return serverSession.get(paths.order)
+                       .expect(function(res){
+                           res.body.should.be.an('object');
+                           res.body.should.have.a.property('_id').that.is.a('string');
+                           res.body.should.have.a.property('no', 2);
+                           res.body.should.have.a.property('articles').that.is.an('array').and.empty;
+
+                       })
+                       .expect(200);
+                })
+               .done(noErr(done), done);
+        });
 
     });
 

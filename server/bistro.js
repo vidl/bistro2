@@ -52,6 +52,13 @@ function incArticle(order, articleId, incAmount){
     return article;
 }
 
+function removeOrderFromSession(req){
+    return function(order){
+        delete req.session.orderId;
+        return order;
+    };
+}
+
 module.exports = function(dbConnection) {
 
     var dataService = dbo(dbConnection);
@@ -74,17 +81,11 @@ module.exports = function(dbConnection) {
         return deferred.promise;
     };
 
-    var commitOrder = function(order){
-        var deferred = q.defer();
-        order.update({ currency : req.params.currency || 'chf'}, function(err, order) {
-            if (err) {
-                deferred.reject(err);
-            } else {
-                delete req.session.orderId;
-                deferred.resolve(order);
-            }
-        });
-        return deferred.promise;
+    var commitOrder = function(currency){
+        return function(order){
+            order.currency = currency;
+            return saveDocument(order);
+        };
     };
 
     var printOrder = function(noPrint){
@@ -92,7 +93,7 @@ module.exports = function(dbConnection) {
             var deferred = q.defer();
             // TODO printing
             deferred.resolve(order);
-            return deferred.promise();
+            return deferred.promise;
         };
     };
 
@@ -131,8 +132,9 @@ module.exports = function(dbConnection) {
 
     app.post('/order', function(req, res){
         getOrderFromSession(req)
-            .then(commitOrder)
-            .then(printOrder(req.params.noPrint))
+            .then(commitOrder(req.param('currency') || 'chf'))
+            .then(printOrder(req.param('noPrint')))
+            .then(removeOrderFromSession(req))
             .catch(handleError(res))
             .done(addToBody(res));
 
