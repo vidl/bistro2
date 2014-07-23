@@ -23,10 +23,8 @@ module.exports = function(dbConnection) {
             next(order);
         }
         if (req.session.orderId) {
-            console.log('read order from db');
             dataService.model.order.findById(req.session.orderId, updateSessionAndReturn);
         } else {
-            console.log('create new order');
             dataService.model.order.create({}, updateSessionAndReturn);
         }
     };
