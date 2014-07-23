@@ -5,12 +5,7 @@ var testBistro = require('./helpers/test-bistro.js');
 
 chai.use(require('./helpers/chai.js'));
 
-function dn(done){
-    return function(err){
-        if (err)done(err);
-        done();
-    };
-}
+var noErr = testBistro.noErr;
 
 describe('orders access', function() {
 
@@ -113,19 +108,81 @@ describe('orders access', function() {
                 })
                 .expect(200, done);
         });
+
         it('can add an article using put on /order/inc', function(done){
-           serverSession.put(paths.orderInc)
-               .send({article : fixtures.articles.article1._id})
-               .expect(function(res){
-                   res.body.should.have.a.property('no', 1);
-                   res.body.should.have.a.property('articles');
-                   res.body.articles.should.be.an('array').with.lengthOf(1);
-                   res.body.should.have.a.deep.property('articles.0.count', 1);
-                   res.body.should.have.a.deep.property('articles.0.article._id', fixtures.articles.article1._id.toHexString());
-                   res.body.should.have.a.deep.property('total.chf', 1.2);
-                   res.body.should.have.a.deep.property('total.eur', 1);
-               })
-               .expect(200, done);
+            serverSession.put(paths.orderInc)
+                .send({article : fixtures.articles.article1._id})
+                .expect(function(res){
+                    res.body.should.have.a.property('no', 1);
+                    res.body.should.have.a.property('articles');
+                    res.body.articles.should.be.an('array').with.lengthOf(1);
+                    res.body.articles[0].should.have.a.property('count', 1);
+                    res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                    res.body.should.have.a.deep.property('total.chf', 1.2);
+                    res.body.should.have.a.deep.property('total.eur', 1);
+                })
+                .expect(200)
+                .then(function(){
+                    return serverSession.put(paths.orderInc)
+                        .send({article: fixtures.articles.article1._id})
+                        .expect(function (res) {
+                            res.body.should.have.a.property('no', 1);
+                            res.body.should.have.a.property('articles');
+                            res.body.articles.should.be.an('array').with.lengthOf(1);
+                            res.body.articles[0].should.have.a.property('count', 2);
+                            res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                            res.body.should.have.a.deep.property('total.chf', 2.4);
+                            res.body.should.have.a.deep.property('total.eur', 2);
+
+                        })
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.put(paths.orderInc)
+                        .send({article: fixtures.articles.article2._id})
+                        .expect(function (res) {
+                            res.body.should.have.a.property('no', 1);
+                            res.body.should.have.a.property('articles');
+                            res.body.articles.should.be.an('array').with.lengthOf(2);
+                            res.body.articles[0].should.have.a.property('count', 2);
+                            res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                            res.body.articles[1].should.have.a.property('count', 1);
+                            res.body.articles[1].should.have.a.deep.property('article._id', fixtures.articles.article2._id.toHexString());
+                            res.body.should.have.a.deep.property('total.chf', 4.8);
+                            res.body.should.have.a.deep.property('total.eur', 4);
+
+                        })
+                        .expect(200);
+                })
+                .done(noErr(done),done);
+        });
+
+        it('can remove an article using put on /order/dec', function(done) {
+            serverSession.put(paths.orderDec)
+                .send({article : fixtures.articles.article2._id})
+                .expect(function(res){
+                    res.body.should.have.a.property('no', 1);
+                    res.body.should.have.a.property('articles');
+                    res.body.articles.should.be.an('array').with.lengthOf(1);
+                    res.body.articles[0].should.have.a.property('count', 2);
+                    res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                    res.body.should.have.a.deep.property('total.chf', 2.4);
+                    res.body.should.have.a.deep.property('total.eur', 2);
+                })
+                .expect(200)
+                .then(function(){
+                    return serverSession.put(paths.orderDec)
+                        .send({article: fixtures.articles.article2._id})
+                        .expect(480)
+                        .expect(function(res){
+                            res.body.should.be.an('object');
+                            res.body.should.have.a.property('message', 'Validation failed');
+                            res.body.should.have.a.property('errors').that.is.an('object');
+                            res.body.errors.should.have.a.property('articles.1.count');
+                        });
+                })
+                .done(noErr(done),done);
+
         });
         /*it('returns the same order until committed', function(done){
             serverSession.get(paths.order)

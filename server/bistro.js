@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var _ = require('underscore');
 var dbo = require('./dbo');
+var q = require('q');
 
 var sessionOptions = {
     secret: uid2(25),
@@ -12,43 +13,94 @@ var sessionOptions = {
     saveUninitialized: true
 };
 
+function saveDocument(docToSave){
+    var deferred = q.defer();
+    docToSave.save(function(err){
+        if (err) {
+            deferred.reject(err);
+        } else {
+            deferred.resolve(docToSave);
+        }
+    });
+    return deferred.promise;
+
+}
+
+function handleError(res){
+    return function(err){
+        res.status(480);
+        res.json(err);
+    }
+}
+
+function addToBody(res){
+    return function(doc){
+        res.json(doc);
+    };
+}
+
+function incArticle(order, articleId, incAmount){
+    var article = _.find(order.articles, function(article){
+        return article.article.equals(articleId);
+    });
+    if (article == undefined){
+        article = { count: incAmount, article: articleId};
+        order.articles.push(article);
+    } else {
+        article.count += incAmount;
+    }
+    return article;
+}
+
 module.exports = function(dbConnection) {
 
     var dataService = dbo(dbConnection);
 
-    var getOrderFromSession = function(req, next){
-        function updateSessionAndReturn(err, order){
-            if (err) throw err;
-            req.session.orderId = order._id;
-            next(order);
+    var getOrderFromSession = function(req){
+        var deferred = q.defer();
+        function resolveOrReject(err, order){
+            if (err) {
+                deferred.reject(err);
+            } else {
+                req.session.orderId = order._id;
+                deferred.resolve(order);
+            }
         }
         if (req.session.orderId) {
-            dataService.model.order.findById(req.session.orderId, updateSessionAndReturn);
+            dataService.model.order.findById(req.session.orderId, resolveOrReject);
         } else {
-            dataService.model.order.create({}, updateSessionAndReturn);
+            dataService.model.order.create({}, resolveOrReject);
         }
+        return deferred.promise;
     };
 
-    var incArticle = function(order, articleId, incAmount){
-        var article = _.find(order.articles, function(article){
-            return article.article.equals(articleId);
+    var commitOrder = function(order){
+        var deferred = q.defer();
+        order.update({ currency : req.params.currency || 'chf'}, function(err, order) {
+            if (err) {
+                deferred.reject(err);
+            } else {
+                delete req.session.orderId;
+                deferred.resolve(order);
+            }
         });
-        if (article == undefined){
-            article = { count: incAmount, article: articleId};
-            order.articles.push(article);
-        } else {
-            article.count += incAmount;
-        }
-        return article;
+        return deferred.promise;
     };
 
-    var handleIncRequest = function (req, res, incAmount){
-        getOrderFromSession(req, function(order){
+    var printOrder = function(noPrint){
+        return function(order){
+            var deferred = q.defer();
+            // TODO printing
+            deferred.resolve(order);
+            return deferred.promise();
+        };
+    };
+
+    var handleIncRequest = function (req, incAmount){
+        return getOrderFromSession(req)
+        .then(function(order){
             incArticle(order, req.body.article, incAmount);
-            order.save(function(err){
-                if (err) throw err;
-                res.json(order);
-            });
+            return saveDocument(order);
         });
     };
 
@@ -59,29 +111,31 @@ module.exports = function(dbConnection) {
     dataService.addRestRoutes(app);
 
     app.get('/order', function(req, res){
-        getOrderFromSession(req, function(order){
-            res.json(order);
-        });
+        getOrderFromSession(req)
+            .catch(handleError(res))
+            .done(addToBody(res));
     });
 
     app.put('/order/inc', function(req, res){
-        handleIncRequest(req, res, 1);
+        handleIncRequest(req, 1)
+            .catch(handleError(res))
+            .done(addToBody(res));
+
     });
 
     app.put('/order/dec', function(req, res){
-        handleIncRequest(req, res, -1);
+        handleIncRequest(req, -1)
+            .catch(handleError(res))
+            .done(addToBody(res));
     });
 
     app.post('/order', function(req, res){
-        getOrderFromSession(req, function(order){
-            order.update({ currency : req.params.currency || 'chf'}, function(err, order){
-                delete req.session.orderId;
-                if (!req.params.noPrint){
-                    // TODO print
-                }
-                res.json(order);
-            });
-        });
+        getOrderFromSession(req)
+            .then(commitOrder)
+            .then(printOrder(req.params.noPrint))
+            .catch(handleError(res))
+            .done(addToBody(res));
+
     });
 
     return app;

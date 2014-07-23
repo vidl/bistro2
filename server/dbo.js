@@ -5,6 +5,8 @@ var _ = require('underscore');
 
 module.exports = function(db){
 
+    var numberMin0Type = { type: Number, min: 0};
+
     var schema = {
         setting: new Schema({
             receiptPrinter: String,
@@ -14,11 +16,11 @@ module.exports = function(db){
             name: String,
             receipt: String,
             price: {
-                chf: Number,
-                eur: Number
+                chf: numberMin0Type,
+                eur: numberMin0Type
             },
             limits: [{
-                dec: Number,
+                dec: numberMin0Type,
                 limit: { type: Schema.Types.ObjectId, ref: 'Limit' }
             }],
             kitchen: Boolean,
@@ -29,18 +31,18 @@ module.exports = function(db){
             no: Number,
             currency: String,
             articles: [{
-                count: Number,
+                count: numberMin0Type,
                 article: { type: Schema.Types.ObjectId, ref: 'Article' }
             }],
             total: {
-                chf: Number,
-                eur: Number
+                chf: numberMin0Type,
+                eur: numberMin0Type
             },
             kitchen: Boolean
         }),
         limit: new Schema({
             name: String,
-            available: Number
+            available: numberMin0Type
         })
     };
 
@@ -54,6 +56,13 @@ module.exports = function(db){
 
     schema.order.pre('save', function(next){
         var doc = this;
+        var removeZeroOrderItems = function(){
+            _.each(doc.articles, function(orderItem){
+                if (orderItem.count == 0){
+                    orderItem.remove();
+                }
+            });
+        };
         var updateTotal = function(){
             doc.populate({ path: 'articles.article', select: 'price'}, function(err, order){
                 if (err) throw err;
@@ -70,9 +79,11 @@ module.exports = function(db){
             model.order.count(function(err, count){
                 if (err) throw err;
                 doc.no = count + 1;
+                removeZeroOrderItems();
                 updateTotal();
             });
         } else {
+            removeZeroOrderItems();
             updateTotal();
         }
     });
