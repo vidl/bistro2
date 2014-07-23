@@ -29,7 +29,7 @@ module.exports = function(db){
         }),
         order: new Schema({
             no: Number,
-            currency: String,
+            currency: { type: String, enum: ['chf', 'eur']},
             articles: [{
                 count: numberMin0Type,
                 article: { type: Schema.Types.ObjectId, ref: 'Article' }

@@ -191,7 +191,7 @@ describe('orders access', function() {
 
         it('can commit an order using post', function(done){
            serverSession.post(paths.order)
-               .send({currency: 'chf'})
+               .send({currency: 'eur'})
                .expect(function(res){
                    res.body.should.have.a.property('no', 1);
                    res.body.should.have.a.property('articles');
@@ -200,7 +200,7 @@ describe('orders access', function() {
                    res.body.articles[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
                    res.body.should.have.a.deep.property('total.chf', 2.4);
                    res.body.should.have.a.deep.property('total.eur', 2);
-                   res.body.should.have.a.property('currency', 'chf');
+                   res.body.should.have.a.property('currency', 'eur');
 
                })
                .expect(200)
@@ -215,6 +215,30 @@ describe('orders access', function() {
                        })
                        .expect(200);
                 })
+               .done(noErr(done), done);
+        });
+
+        it('can commit only with currencies chf and eur', function(done){
+           serverSession.post(paths.order)
+               .send({currency: 'dollar'})
+               .expect(function(res){
+                   res.body.should.be.an('object');
+                   res.body.should.have.a.property('message', 'Validation failed');
+                   res.body.should.have.a.property('errors').that.is.an('object');
+                   res.body.errors.should.have.a.property('currency');
+               })
+               .expect(480)
+               .then(function(){
+                   return serverSession.get(paths.order)
+                       .expect(function(res){
+                           res.body.should.be.an('object');
+                           res.body.should.have.a.property('_id').that.is.a('string');
+                           res.body.should.have.a.property('no', 2);
+                           res.body.should.have.a.property('articles').that.is.an('array').and.empty;
+
+                       })
+                       .expect(200);
+               })
                .done(noErr(done), done);
         });
 
