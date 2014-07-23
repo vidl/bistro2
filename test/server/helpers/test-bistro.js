@@ -8,3 +8,8 @@ var fixtures = pow.connect(dbConnection);
 exports.app = app;
 exports.fixtures = fixtures;
 exports.id = pow.createObjectId;
+exports.noErr = function(done){
+    return function(){
+        done();
+    };
+};

@@ -5,6 +5,9 @@ var testBistro = require('./helpers/test-bistro.js');
 
 chai.use(require('./helpers/chai.js'));
 
+var noErr = testBistro.noErr;
+
+
 describe('articles access', function() {
 
     var paths = {
@@ -89,12 +92,12 @@ describe('articles access', function() {
                     .expect(200);
             })
             .then(function(){
-                request(app)
+                return request(app)
                     .get(paths.articlesCount)
                     .expect({count: 1})
-                    .expect(200, done);
+                    .expect(200);
             })
-            .catch(done);
+            .done(noErr(done), done);
         });
     });
 
@@ -121,9 +124,9 @@ describe('articles access', function() {
                         res.body.should.have.a.deep.property('price.chf', 5.4);
                         res.body.should.have.a.deep.property('price.eur', 4);
                     })
-                    .expect(200, done);
+                    .expect(200);
             })
-            .catch(done);
+            .done(noErr(done), done);
         });
     });
 
@@ -151,9 +154,9 @@ describe('articles access', function() {
                     .expect(function(res){
                         res.body.should.be.an('array').with.length(0);
                     })
-                    .expect(200, done);
+                    .expect(200);
             })
-            .catch(done);
+            .done(noErr(done), done);
        });
     });
 
