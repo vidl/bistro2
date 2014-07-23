@@ -97,13 +97,44 @@ module.exports = function(dbConnection) {
         };
     };
 
+    var getAggregatedLimits = function(){
+        var deferred = q.defer();
+        var total = {};
+        dataService.model.limit.find({}).exec().then(function(limits){
+            _.each(limits,function(limit){
+                total[limit._id.toHexString()] = { used: 0, total: limit.available};
+            });
+            return dataService.model.order.find({})
+                .populate({path: 'articles.article', select: 'limits'})
+                .exec();
+        })
+        .then(function(orders){
+            _.each(orders, function(order){
+                _.each(order.articles, function(orderItem){
+                    _.each(orderItem.article.limits, function(articleLimit){
+                        var limitId = articleLimit.limit.toHexString();
+                        total[limitId].used += articleLimit.dec * orderItem.count;
+                    });
+                });
+            });
+            deferred.resolve(total);
+        })
+        .then(null, function(err){
+            deferred.reject(err);
+        });
+
+        return deferred.promise;
+    };
+
     var handleIncRequest = function (req, incAmount){
         return getOrderFromSession(req)
         .then(function(order){
-            incArticle(order, req.body.article, incAmount);
+            var articleId = req.param('article');
+            incArticle(order, articleId, incAmount);
             return saveDocument(order);
         });
     };
+
 
     var app = express();
     app.use(bodyParser.json());
@@ -140,6 +171,11 @@ module.exports = function(dbConnection) {
 
     });
 
+    app.get('/limits', function(req, res){
+       getAggregatedLimits()
+           .catch(handleError(res))
+           .done(addToBody(res));
+    });
     return app;
 };
 
