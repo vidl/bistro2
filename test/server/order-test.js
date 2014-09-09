@@ -31,7 +31,7 @@ describe('orders access', function() {
                 chf: 1.2,
                 eur: 1
             },
-            limits: [ { dec: 1, limit: fixtures.limits.limit1.__id } ],
+            limits: [ { dec: 1, limit: fixtures.limits.limit1._id } ],
             kitchen: true,
             active: true
         },

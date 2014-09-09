@@ -126,9 +126,43 @@ module.exports = function(dbConnection) {
         return deferred.promise;
     };
 
+    var ensureLimitsNotReached = function(articleId, incAmount){
+        var deferred = q.defer();
+        if (incAmount <= 0) {
+            deferred.resolve();
+        } else {
+            dataService.model.article.findById(articleId).exec()
+            .then(function (article){
+                getAggregatedLimits().then(function(aggergatedLimits){
+                    _.each(article.limits, function(limitConfig){
+                        var aggergatedLimit = aggergatedLimits[limitConfig.limit.toHexString()];
+                        var maxAvailable = aggergatedLimit.total - aggergatedLimit.used;
+                        if (maxAvailable < incAmount * limitConfig.dec) {
+                            deferred.reject(limitConfig.limit);
+                        }
+                    });
+                    if (deferred.promise.isPending()) {
+                        deferred.resolve();
+                    }
+                })
+                .catch(function(err){
+                    deferred.reject(err);
+                });
+            }, function(err){
+                deferred.reject(err);
+            });
+
+        }
+        return deferred.promise;
+    };
+
     var handleIncRequest = function (req, incAmount){
-        return getOrderFromSession(req)
-        .then(function(order){
+        var articleId = req.param('article');
+        return ensureLimitsNotReached(articleId, incAmount)
+            .then(function(){
+                return getOrderFromSession(req);
+            })
+            .then(function(order){
             var articleId = req.param('article');
             incArticle(order, articleId, incAmount);
             return saveDocument(order);
