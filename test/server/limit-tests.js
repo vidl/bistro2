@@ -50,13 +50,26 @@ describe('limit logic', function() {
         },
         article3: {
             _id: id(),
-            name: 'article2',
+            name: 'article3',
             price: {
                 chf: 2.4,
                 eur: 2
             },
             limits: [
                 { dec: 1, limit: fixtures.limits.limit1._id }
+            ],
+            kitchen: true,
+            active: true
+        },
+        article4: {
+            _id: id(),
+            name: 'article4',
+            price: {
+                chf: 2.4,
+                eur: 2
+            },
+            limits: [
+                { dec: 1, limit: fixtures.limits.limit2._id }
             ],
             kitchen: true,
             active: true
@@ -146,5 +159,56 @@ describe('limit logic', function() {
                 .done(noErr(done),done);
         });
 
+        it('cannot order more than the limit - attempt will return status code 480', function(done){
+            serverSession.put(paths.orderInc)
+                .send({article : fixtures.articles.article1._id})
+                .expect(200)
+                .then(function(){
+                    return serverSession.put(paths.orderInc)
+                        .send({article : fixtures.articles.article1._id})
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.get(paths.limits)
+                        .expect(function (res) {
+                            res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 4});
+                            res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 6});
+                        })
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.put(paths.orderInc)
+                        .send({article : fixtures.articles.article1._id})
+                        .expect(480);
+                })
+                .then(function(){
+                    return serverSession.get(paths.limits)
+                        .expect(function (res) {
+                            res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 4});
+                            res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 6});
+                        })
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.put(paths.orderInc)
+                        .send({article : fixtures.articles.article4._id})
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.get(paths.limits)
+                        .expect(function (res) {
+                            res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 4});
+                            res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 7});
+                        })
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.put(paths.orderInc)
+                        .send({article : fixtures.articles.article4._id})
+                        .expect(480);
+                })
+                .done(noErr(done),done);
+
+        });
     })
 });
