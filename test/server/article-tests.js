@@ -101,7 +101,7 @@ describe('articles access', function() {
         });
     });
 
-    describe('put /articles', function(){
+    describe('post or put /articles', function(){
         it('should update an existing article', function(done){
             request(app)
                 .get(paths.articles)
@@ -114,7 +114,7 @@ describe('articles access', function() {
                 })
             .then(function(res) {
                 request(app)
-                    .put(paths.articles + '/' + res.body[0]._id)
+                    .post(paths.articles + '/' + res.body[0]._id)
                     .type('json')
                     .send({name: 'blabla'})
                     .expect(function (res) {
