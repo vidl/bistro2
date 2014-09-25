@@ -10,8 +10,8 @@ module.exports = function(grunt) {
     var replaceScripts = function(param){
         var indent =  /([ \t]*)<!--.*/.exec(param)[1];
         var scripts = '<!-- @@NG_SCRIPTS_START@@ -->\r\n';
-        var appDir = grunt.config.data.appDir;
-        var expandOptions = { cwd: appDir };
+        var clientDir = grunt.config.data.clientDir;
+        var expandOptions = { cwd: clientDir };
         var files = grunt.file.expand(expandOptions,
             '**/*.js',
             '!**/*_test.js',
@@ -35,14 +35,14 @@ module.exports = function(grunt) {
     // Project configuration.
     grunt.initConfig({
         // Watches files for changes and runs tasks based on the changed files
-        appDir: 'app',
+        clientDir: 'client',
         watch: {
             bower: {
                 files: ['bower.json'],
                 tasks: ['wiredep']
             },
             js: {
-                files: ['<%= appDir %>/**/*.js'],
+                files: ['<%= clientDir %>/**/*.js'],
                 tasks: ['replace:js'],
                 options: {
                     event: ['added', 'deleted']
@@ -52,13 +52,13 @@ module.exports = function(grunt) {
         // Automatically inject Bower components into the app
         wiredep: {
             app: {
-                src: ['<%= appDir %>/index.html'],
+                src: ['<%= clientDir %>/index.html'],
                 ignorePath:  /\.\.\//
             }
         },
         replace: {
             js: {
-                src: ['<%= appDir %>/index.html'],
+                src: ['<%= clientDir %>/index.html'],
                 overwrite: true,
                 replacements: [{
                     from: /(([ \t]*)<!--\s*@@NG_SCRIPTS_START@@\s*-->)(\n|\r|.)*?(<!--\s*@@NG_SCRIPTS_END@@\s*-->)/gi,
