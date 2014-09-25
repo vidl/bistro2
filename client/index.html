@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="de">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/bootstrap-css-only/css/bootstrap.css" />
+    <!-- endbower -->
+    <style>
+        [ng-cloak] {
+            display: none;
+        }
+    </style>
+    <title>Bistro</title>
+    <link rel="stylesheet" href="app.css">
+</head>
+<body ng-cloak ng-app="bistro">
+<div class="container-fluid" ui-view=>
+</div>
+<!-- bower:js -->
+<script src="bower_components/angular/angular.js"></script>
+<script src="bower_components/angular-route/angular-route.js"></script>
+<script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
+<script src="bower_components/angular-resource/angular-resource.js"></script>
+<script src="bower_components/angular-mocks/angular-mocks.js"></script>
+<!-- endbower -->
+<!-- @@NG_SCRIPTS_START@@ -->
+<script src="app.js"></script>
+<script src="articles/articles.js"></script>
+<script src="cashbox/cashbox.js"></script>
+<script src="components/currency/currency.js"></script>
+<script src="components/currency/currencyDirective.js"></script>
+<script src="components/currency/currencyFilter.js"></script>
+<script src="components/version/interpolate-filter.js"></script>
+<script src="components/version/version-directive.js"></script>
+<script src="components/version/version.js"></script>
+<!-- @@NG_SCRIPTS_END@@ -->
+</body>
+</html>

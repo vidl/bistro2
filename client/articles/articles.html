@@ -1,0 +1,25 @@
+<table class="table table-striped">
+    <thead>
+    <tr>
+        <th>Name</th>
+        <th ng-repeat="currency in currencies" class="hidden-xs">{{currency | uppercase}}</th>
+        <th>Aktiv</th>
+        <th>Küche</th>
+        <th>Verfügbar</th>
+    </tr>
+    </thead>
+    <tbody>
+     <tr ng-repeat="article in articles" ng-click="showDetail(article)">
+         <td><a ui-sref="articleDetail({ articleId: article._id})">{{article.name}}</a></td>
+         <td ng-repeat="currency in currencies" class="hidden-xs">{{article.price[currency] | currency:currency}}</td>
+         <td><span ng-show="article.active" class="glyphicon glyphicon-ok"></span></td>
+         <td><span ng-show="article.kitchen" class="glyphicon glyphicon-ok"></span></td>
+         <td></td>
+     </tr>
+    </tbody>
+</table>
+
+<div>
+
+    <a class="btn btn-default" role="button" ui-sref="articleDetail">Hinzufügen</a>
+</div>
