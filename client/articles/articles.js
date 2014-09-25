@@ -11,7 +11,7 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency'])
             })
             .state('articleDetail', {
                 url: '/articles/:articleId',
-                templateUrl: 'articles/articleform.html',
+                templateUrl: 'articles/form.html',
                 controller: 'ArticleCtrl'
 
         });
