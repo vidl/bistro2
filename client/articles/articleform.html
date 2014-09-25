@@ -53,7 +53,7 @@
                         ng-class="{'btn-danger': form.$invalid, 'btn-primary': !form.$invalid}"
                         ng-disabled="form.$invalid" ng-click="save()">Speichern
                 </button>
-                <button class="btn btn-inverse delete" ng-click="remove()" ng-show="article._id">L&ouml;schen
+                <button class="btn btn-danger delete" ng-click="remove()" ng-show="article._id">L&ouml;schen
                 </button>
                 <a ui-sref="articles" class="btn btn-default">Abbrechen</a>
             </div>
