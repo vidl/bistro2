@@ -1,12 +1,14 @@
 'use strict';
 
-angular.module('bistro.cashbox', ['ngRoute'])
+angular.module('bistro.cashbox', ['ui.router'])
 
-    .config(['$routeProvider', function ($routeProvider) {
-        $routeProvider.when('/cashbox', {
+    .config(['$stateProvider', function ($stateProvider) {
+        $stateProvider.state('cashbox', {
+            url: '/cashbox',
             templateUrl: 'cashbox/cashbox.html',
             controller: 'CashboxCtrl'
         });
+
     }])
 
     .controller('CashboxCtrl', [function () {

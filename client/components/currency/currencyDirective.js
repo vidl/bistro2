@@ -6,7 +6,7 @@ angular.module('bistro.currency.directive',['bistro.currency.filter']).directive
             restrict: 'A',
             require: 'ngModel',
             link: function(scope, elmement, attrs, ctrl) {
-                var currency = $filter('currency');
+                var currency = $filter('bistroCurrency');
                 ctrl.$render = function() {
                     elmement.val(currency(ctrl.$modelValue));
                 };

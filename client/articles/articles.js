@@ -1,9 +1,8 @@
 'use strict';
 
-angular.module('bistro.articles', ['ui.router','ngResource'])
+angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency'])
 
-    .config(['$stateProvider', '$urlRouterProvider', function ($stateProvider, $urlRouterProvider) {
-        $urlRouterProvider.otherwise("/articles");
+    .config(['$stateProvider', function ($stateProvider) {
         $stateProvider
             .state('articles',{
                 url: '/articles',
@@ -18,25 +17,37 @@ angular.module('bistro.articles', ['ui.router','ngResource'])
         });
     }])
 
-    .value('currencies', ['chf', 'eur'])
-
     .service('Article', ['$resource', function($resource){
         return $resource('/api/v1/articles/:articleId',{articleId: '@_id'});
     }])
 
-    .controller('ArticlesCtrl', ['$scope', 'Article', 'currencies', function ($scope, Article, currencies) {
+    .controller('ArticlesCtrl', ['$scope', 'Article', 'availableCurrencies', '$state', function ($scope, Article, availableCurrencies, $state) {
         $scope.articles = Article.query();
-        $scope.currencies = currencies;
+        $scope.availableCurrencies = availableCurrencies;
+        $scope.showDetail = function(article){
+            $state.go('articleDetail', {articleId: article._id});
+        };
     }])
 
-    .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article', 'currencies', function($scope, $stateParams, Article, currencies){
+    .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article', 'availableCurrencies', '$state', function($scope, $stateParams, Article, availableCurrencies, $state){
+        $scope.availableCurrencies = availableCurrencies;
         if ($stateParams.articleId){
             $scope.article = Article.get($stateParams)
         } else {
             $scope.article = new Article();
             $scope.article.price = {};
-            angular.forEach(currencies, function(currency){
+            angular.forEach(availableCurrencies, function(currency){
                 $scope.article.price[currency] = 0;
             });
+
         }
+        $scope.save = function() {
+            $scope.article.$save();
+            $state.go('articles');
+        };
+
+        $scope.remove = function(){
+            $scope.article.$remove();
+            $state.go('articles');
+        };
     }]);

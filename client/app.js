@@ -3,9 +3,10 @@
 // Declare app level module which depends on views, and components
 angular.module('bistro', [
   'ui.router',
+  'bistro.cashbox',
   'bistro.articles'
 ])
 
 .config(['$urlRouterProvider', function($urlRouterProvider) {
-   $urlRouterProvider.otherwise('/articles');
+   $urlRouterProvider.otherwise('/cashbox');
 }]);

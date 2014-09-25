@@ -1,4 +1,4 @@
-angular.module('bistro.currency.filter',[]).filter('currency', function() {
+angular.module('bistro.currency.filter',[]).filter('bistroCurrency', function() {
     return function(amount, symbol) {
         if (typeof amount == 'string') {
             return parseFloat(amount) * 100;
