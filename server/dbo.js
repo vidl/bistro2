@@ -6,12 +6,17 @@ var _ = require('underscore');
 module.exports = function(db){
 
     var numberMin0Type = { type: Number, min: 0};
+    var articleLimit = new Schema({
+        dec: numberMin0Type,
+        limit: { type: Schema.Types.ObjectId, ref: 'Limit' }
+    });
 
     var schema = {
         setting: new Schema({
             receiptPrinter: String,
             orderPrinter: String
         }),
+        articleLimit: articleLimit,
         article: new Schema({
             name: String,
             receipt: String,
@@ -19,10 +24,7 @@ module.exports = function(db){
                 chf: numberMin0Type,
                 eur: numberMin0Type
             },
-            limits: [{
-                dec: numberMin0Type,
-                limit: { type: Schema.Types.ObjectId, ref: 'Limit' }
-            }],
+            limits: [articleLimit],
             kitchen: Boolean,
             active: Boolean,
             group: String
@@ -88,6 +90,17 @@ module.exports = function(db){
         }
     });
 
+    schema.article.pre('save', function(next){
+        // remove limits with a dec < 1
+       var doc = this;
+        _.each(doc.limits, function(articleLimit){
+            if (articleLimit && articleLimit.dec < 1){
+                articleLimit.remove();
+            }
+        });
+        next();
+    });
+
     mongoose.connect(db);
     // CONNECTION EVENTS
     // When successfully connected
@@ -116,12 +129,26 @@ module.exports = function(db){
     return {
         addRestRoutes: function(app){
             restify.serve(app, model.setting);
-            restify.serve(app, model.article);
+
+            restify.serve(app, model.article, {
+                prereq: function(req) {
+                    _.each(req.body.limits, function(articleLimit){
+                       if (articleLimit.limit._id) {
+                           articleLimit.limit = articleLimit.limit._id;
+                       }
+                    });
+                    return true;
+                },
+                findOneAndUpdate: false // necessary for calling hooks like pre-save
+            });
+
             restify.serve(app, model.order, {
                 prereq: function(req){
                   return req.method === 'GET' || req.method === 'DELETE';
-                }
+                },
+                findOneAndUpdate: false // necessary for calling hooks like pre-save
             });
+
             restify.serve(app, model.limit);
         },
         model: model
