@@ -30,7 +30,7 @@ angular.module('bistro.limits', ['ui.router','ngResource'])
 
     .controller('LimitCtrl', ['$scope', '$stateParams', 'Limit', '$state', function($scope, $stateParams, Limit, $state){
         if ($stateParams.limitId){
-            $scope.limit = Limit.get($stateParams)
+            $scope.limit = Limit.get($stateParams);
         } else {
             $scope.limit = new Limit();
 

@@ -1,50 +1,77 @@
 <div class="page-header">
     <h1 ng-if="article._id">Artikel bearbeiten</h1>
+
     <h1 ng-if="!article._id">Artikel erfassen</h1>
 </div>
 <div class="row">
     <form class="form-horizontal col-sm-8" role="form">
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Name</label>
+        <div class="panel panel-default">
+            <div class="panel-heading">Stammdaten</div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Name</label>
 
-            <div class="col-sm-10">
-                <input required maxlength="45" type="text" class="form-control" ng-model="article.name">
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Text Beleg</label>
+                    <div class="col-sm-10">
+                        <input required maxlength="45" type="text" class="form-control" ng-model="article.name">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Text Beleg</label>
 
-            <div class="col-sm-10">
-                <input maxlength="35" type="text" class="form-control" ng-model="article.receipt">
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Preise</label>
+                    <div class="col-sm-10">
+                        <input maxlength="35" type="text" class="form-control" ng-model="article.receipt">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Preise</label>
 
-            <div class="col-sm-10">
-                <div class="input-group col-sm-3 pull-left" ng-repeat="currency in availableCurrencies" style="margin-right:12px">
-                    <input required class="form-control text-right" type="text" currency
-                           ng-model="article.price[currency]">
-                    <span class="input-group-addon">{{currency | uppercase}}</span>
+                    <div class="col-sm-10">
+                        <div class="input-group col-sm-3 pull-left" ng-repeat="currency in availableCurrencies"
+                             style="margin-right:12px">
+                            <input required class="form-control text-right" type="text" currency
+                                   ng-model="article.price[currency]">
+                            <span class="input-group-addon">{{currency | uppercase}}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Status</label>
+
+                    <div class="col-sm-10">
+                        <label class="checkbox-inline">
+                            <input type="checkbox" ng-model="article.kitchen">Zubereitung durch K&uuml;che
+                        </label>
+                        <label class="checkbox-inline">
+                            <input type="checkbox" ng-model="article.active">In der Kasse verfügbar
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Gruppe</label>
+
+                    <div class="col-sm-10">
+                        <input ng-model="article.group" maxlength="20" type="text" class="form-control">
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Status</label>
-            <div class="col-sm-10">
-                <label class="checkbox-inline">
-                    <input type="checkbox" ng-model="article.kitchen">Zubereitung durch K&uuml;che
-                </label>
-                <label class="checkbox-inline">
-                    <input type="checkbox" ng-model="article.active">In der Kasse verfügbar
-                </label>
-            </div>
-        </div>
-        <div class="form-group">
-            <label class="col-sm-2 control-label">Gruppe</label>
 
-            <div class="col-sm-10">
-                <input ng-model="article.group" maxlength="20" type="text" class="form-control">
+        <div class="panel panel-default">
+            <div class="panel-heading">Limitierte Zutaten (pro Artikel)</div>
+            <div class="panel-body">
+
+                <div class="form-group" ng-repeat="articleLimit in article.limits">
+                    <label class="col-sm-2 control-label">{{articleLimit.limit.name}}</label>
+                    <div class="col-sm-2"><input maxlength="5" type="text" class="form-control text-right" ng-model="articleLimit.dec"></div>
+                    <a class="btn btn-default" ng-click="article.limits.splice($index,1)">Löschen</a>
+                </div>
+                <div class="form-group">
+                    <div class="col-sm-10 col-sm-offset-2">
+                        <span ng-repeat="limit in limits()">
+                            <a href ng-click="article.limits.push({dec: 1, limit: limit})">{{limit.name}}</a>{{$last ? '' : ', '}}
+                        </span>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="form-group">
@@ -54,7 +81,8 @@
                         ng-disabled="form.$invalid" ng-click="save()">Speichern
                 </button>
                 <a ui-sref="articles" class="btn btn-default">Abbrechen</a>
-                <button class="btn btn-danger pull-right" ng-click="remove()" ng-show="article._id">L&ouml;schen</button>
+                <button class="btn btn-danger pull-right" ng-click="remove()" ng-show="article._id">L&ouml;schen
+                </button>
             </div>
         </div>
     </form>

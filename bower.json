@@ -11,6 +11,7 @@
         "angular-ui-router": "0.2.x",
         "angular-resource": "1.2.x",
         "angular-mocks": "~1.2.x",
-        "bootstrap-css-only": "3.x"
+        "bootstrap-css-only": "3.x",
+        "underscore": "1.7.x"
     }
 }

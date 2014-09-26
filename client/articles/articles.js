@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency'])
+angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','bistro.limits'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider
@@ -29,18 +29,30 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency'])
         };
     }])
 
-    .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article', 'availableCurrencies', '$state', function($scope, $stateParams, Article, availableCurrencies, $state){
+    .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article','Limit', 'availableCurrencies', '$state', function($scope, $stateParams, Article, Limit, availableCurrencies, $state){
         $scope.availableCurrencies = availableCurrencies;
         if ($stateParams.articleId){
-            $scope.article = Article.get($stateParams)
+            $scope.article = Article.get(angular.extend($stateParams, {populate: 'limits.limit'}));
         } else {
             $scope.article = new Article();
+            $scope.article.limits = [];
             $scope.article.price = {};
             angular.forEach(availableCurrencies, function(currency){
                 $scope.article.price[currency] = 0;
             });
 
         }
+
+        var availableLimits = Limit.query();
+        $scope.limits = function(){
+            var usedLimits = _.pluck($scope.article.limits, 'limit');
+            return _.reject(availableLimits, function(limit){
+                return _.find(usedLimits, function(usedLimit){
+                    return angular.equals(limit, usedLimit);
+                });
+            });
+        };
+
         $scope.save = function() {
             $scope.article.$save();
             $state.go('articles');
