@@ -22,7 +22,7 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
     }])
 
     .controller('ArticlesCtrl', ['$scope', 'Article', 'availableCurrencies', '$state', function ($scope, Article, availableCurrencies, $state) {
-        $scope.articles = Article.query();
+        $scope.articles = Article.query({populate: 'limits.limit'});
         $scope.availableCurrencies = availableCurrencies;
         $scope.showDetail = function(article){
             $state.go('articleDetail', {articleId: article._id});
