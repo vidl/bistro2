@@ -129,7 +129,6 @@ describe('articles access', function() {
                     res.body[0].should.have.a.deep.property('price.eur', 4);
                 })
             .then(function(res) {
-                console.log('post %s\n', res.body[0].name);
                 return request(app)
                     .post(paths.articles + '/' + res.body[0]._id)
                     .type('json')
@@ -152,7 +151,6 @@ describe('articles access', function() {
                     .get(paths.articles)
                     .accept('json')
                     .expect(function(res){
-                        console.log('check again\n')
                         res.body.should.be.an('array').with.length(1);
                         res.body[0].should.be.an('object');
                         res.body[0].should.have.a.property('name', 'blabla');
