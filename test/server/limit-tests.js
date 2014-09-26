@@ -10,7 +10,7 @@ var noErr = testBistro.noErr;
 describe('limit logic', function() {
 
     var paths = {
-        limits: '/limits',
+        availability: '/availability',
         order: '/order',
         orderInc: '/order/inc',
         orderDec: '/order/dec'
@@ -84,7 +84,7 @@ describe('limit logic', function() {
         var serverSession = request.agent(app);
 
         it('returns used = 0 since there are no orders', function(done){
-            serverSession.get(paths.limits)
+            serverSession.get(paths.availability)
                 .expect(function(res){
                     res.body.should.be.an('object');
                     res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 0});
@@ -97,7 +97,7 @@ describe('limit logic', function() {
                 .send({article : fixtures.articles.article1._id})
                 .expect(200)
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 1});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 2});
@@ -110,7 +110,7 @@ describe('limit logic', function() {
                         .expect(200);
                 })
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 2});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 4});
@@ -123,7 +123,7 @@ describe('limit logic', function() {
                         .expect(200);
                 })
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 2});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 4});
@@ -136,7 +136,7 @@ describe('limit logic', function() {
                         .expect(200);
                 })
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 3});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 4});
@@ -149,7 +149,7 @@ describe('limit logic', function() {
                         .expect(200);
                 })
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 2});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 2});
@@ -169,7 +169,7 @@ describe('limit logic', function() {
                         .expect(200);
                 })
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 4});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 6});
@@ -182,7 +182,7 @@ describe('limit logic', function() {
                         .expect(480);
                 })
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 4});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 6});
@@ -195,7 +195,7 @@ describe('limit logic', function() {
                         .expect(200);
                 })
                 .then(function(){
-                    return serverSession.get(paths.limits)
+                    return serverSession.get(paths.availability)
                         .expect(function (res) {
                             res.body[fixtures.limits.limit1._id.toHexString()].should.deep.equals({total: 10, used: 4});
                             res.body[fixtures.limits.limit2._id.toHexString()].should.deep.equals({total: 7, used: 7});

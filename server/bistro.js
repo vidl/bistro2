@@ -205,7 +205,7 @@ module.exports = function(dbConnection) {
 
     });
 
-    app.get('/limits', function(req, res){
+    app.get('/availability', function(req, res){
        getAggregatedLimits()
            .catch(handleError(res))
            .done(addToBody(res));
