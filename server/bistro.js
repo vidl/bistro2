@@ -202,13 +202,6 @@ module.exports = function(dbConnection) {
         handleIncRequest(req)
             .then(populate('items.article'))
             .then(function(order){
-                // update the kitchen state
-                order.kitchen = _.reduce(order.items, function(kitchen, item){
-                    return kitchen || item.article.kitchen;
-                }, false);
-                return saveDocument(order);
-            })
-            .then(function(order){
                 // add the new limits to the response object
                 return getAggregatedLimits().then(function(limits){
                     return {

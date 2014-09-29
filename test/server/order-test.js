@@ -32,7 +32,7 @@ describe('orders access', function() {
                 eur: 1
             },
             limits: [ { dec: 1, limit: fixtures.limits.limit1._id } ],
-            kitchen: true,
+            kitchen: false,
             active: true
         },
         article2: {
@@ -105,11 +105,12 @@ describe('orders access', function() {
                     res.body.should.have.a.property('_id').that.is.a('string');
                     res.body.should.have.a.property('no', 1);
                     res.body.should.have.a.property('items').that.is.an('array').and.empty;
+                    res.body.should.have.a.property('kitchen', false);
                 })
                 .expect(200, done);
         });
 
-        it('can add an article using put on /order/inc', function(done){
+        it('can add an article using put on /order', function(done){
             serverSession.put(paths.orderInc)
                 .send({article: fixtures.articles.article1._id, incAmount: 1})
                 .expect(function(res){
@@ -124,6 +125,7 @@ describe('orders access', function() {
                     res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
                     res.body.order.should.have.a.deep.property('total.chf', 1.2);
                     res.body.order.should.have.a.deep.property('total.eur', 1);
+                    res.body.order.should.have.a.property('kitchen', false);
 
                     res.body.should.have.a.property('limits').that.is.an('object');
                     res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -147,6 +149,7 @@ describe('orders access', function() {
                             res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
                             res.body.order.should.have.a.deep.property('total.chf', 2.4);
                             res.body.order.should.have.a.deep.property('total.eur', 2);
+                            res.body.order.should.have.a.property('kitchen', false);
 
                             res.body.should.have.a.property('limits').that.is.an('object');
                             res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -173,6 +176,7 @@ describe('orders access', function() {
                             res.body.order.items[1].should.have.a.deep.property('article._id', fixtures.articles.article2._id.toHexString());
                             res.body.order.should.have.a.deep.property('total.chf', 4.8);
                             res.body.order.should.have.a.deep.property('total.eur', 4);
+                            res.body.order.should.have.a.property('kitchen', true);
 
                             res.body.should.have.a.property('limits').that.is.an('object');
                             res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -185,7 +189,7 @@ describe('orders access', function() {
                 .done(noErr(done),done);
         });
 
-        it('can remove an article using put on /order/dec', function(done) {
+        it('can remove an article using put on /order', function(done) {
             serverSession.put(paths.orderDec)
                 .send({article: fixtures.articles.article2._id, incAmount: -1})
                 .expect(function(res){
@@ -200,6 +204,7 @@ describe('orders access', function() {
                     res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
                     res.body.order.should.have.a.deep.property('total.chf', 2.4);
                     res.body.order.should.have.a.deep.property('total.eur', 2);
+                    res.body.order.should.have.a.property('kitchen', false);
 
                     res.body.should.have.a.property('limits').that.is.an('object');
                     res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -235,7 +240,7 @@ describe('orders access', function() {
                    res.body.should.have.a.deep.property('total.chf', 2.4);
                    res.body.should.have.a.deep.property('total.eur', 2);
                    res.body.should.have.a.property('currency', 'eur');
-
+                   res.body.should.have.a.property('kitchen', false);
                })
                .expect(200)
                .then(function(){

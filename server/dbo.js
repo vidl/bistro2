@@ -67,14 +67,16 @@ module.exports = function(db){
                 }
             });
         };
-        var updateTotal = function(){
-            doc.populate({ path: 'items.article', select: 'price'}, function(err, order){
+        var updateTotalAndKitchen = function(){
+            doc.populate({ path: 'items.article', select: 'price kitchen'}, function(err, order){
                 if (err) throw err;
                 doc.total.chf = 0;
                 doc.total.eur = 0;
+                doc.kitchen = false;
                 _.each(order.items, function(item){
                     doc.total.chf += item.article.price.chf * item.count;
                     doc.total.eur += item.article.price.eur * item.count;
+                    doc.kitchen |= item.article.kitchen;
                 });
                 next();
             });
@@ -84,11 +86,11 @@ module.exports = function(db){
                 if (err) throw err;
                 doc.no = count + 1;
                 removeZeroOrderItems();
-                updateTotal();
+                updateTotalAndKitchen();
             });
         } else {
             removeZeroOrderItems();
-            updateTotal();
+            updateTotalAndKitchen();
         }
     });
 
