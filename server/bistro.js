@@ -74,7 +74,7 @@ module.exports = function(dbConnection) {
             }
         }
         if (req.session.orderId) {
-            dataService.model.order.findById(req.session.orderId, resolveOrReject);
+            dataService.model.order.findById(req.session.orderId).populate('items.article', resolveOrReject);
         } else {
             dataService.model.order.create({}, resolveOrReject);
         }
@@ -135,6 +135,21 @@ module.exports = function(dbConnection) {
         });
     };
 
+    var populate = function(what){
+        return function(model){
+            var deferred = q.defer();
+            function resolveOrReject(err, model){
+                if (err) {
+                    deferred.reject(err);
+                } else {
+                    deferred.resolve(model);
+                }
+            }
+            model.populate(what, resolveOrReject);
+            return deferred.promise;
+        };
+    };
+
     var ensureLimitsNotReached = function(articleId, incAmount){
         var deferred = q.defer();
         if (incAmount <= 0) {
@@ -193,6 +208,7 @@ module.exports = function(dbConnection) {
 
     app.put('/order/inc', function(req, res){
         handleIncRequest(req, 1)
+            .then(populate('items.article'))
             .then(addNewLimits)
             .catch(handleError(res))
             .done(addToBody(res));
@@ -201,6 +217,7 @@ module.exports = function(dbConnection) {
 
     app.put('/order/dec', function(req, res){
         handleIncRequest(req, -1)
+            .then(populate('items.article'))
             .then(addNewLimits)
             .catch(handleError(res))
             .done(addToBody(res));
