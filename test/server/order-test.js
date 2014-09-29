@@ -113,29 +113,46 @@ describe('orders access', function() {
             serverSession.put(paths.orderInc)
                 .send({article : fixtures.articles.article1._id})
                 .expect(function(res){
-                    res.body.should.have.a.property('no', 1);
-                    res.body.should.have.a.property('items');
-                    res.body.should.not.have.a.property('currency');
-                    res.body.items.should.be.an('array').with.lengthOf(1);
-                    res.body.items[0].should.have.a.property('count', 1);
-                    res.body.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
-                    res.body.should.have.a.deep.property('total.chf', 1.2);
-                    res.body.should.have.a.deep.property('total.eur', 1);
+                    res.body.should.be.an('object');
+
+                    res.body.should.have.a.property('order');
+                    res.body.order.should.have.a.property('no', 1);
+                    res.body.order.should.have.a.property('items');
+                    res.body.order.should.not.have.a.property('currency');
+                    res.body.order.items.should.be.an('array').with.lengthOf(1);
+                    res.body.order.items[0].should.have.a.property('count', 1);
+                    res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                    res.body.order.should.have.a.deep.property('total.chf', 1.2);
+                    res.body.order.should.have.a.deep.property('total.eur', 1);
+
+                    res.body.should.have.a.property('limits').that.is.an('object');
+                    res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
+                    var limit1 = res.body.limits[fixtures.limits.limit1._id.toString()];
+                    limit1.should.have.a.property('total', 10);
+                    limit1.should.have.a.property('used', 1);
                 })
                 .expect(200)
                 .then(function(){
                     return serverSession.put(paths.orderInc)
                         .send({article: fixtures.articles.article1._id})
                         .expect(function (res) {
-                            res.body.should.have.a.property('no', 1);
-                            res.body.should.have.a.property('items');
-                            res.body.should.not.have.a.property('currency');
-                            res.body.items.should.be.an('array').with.lengthOf(1);
-                            res.body.items[0].should.have.a.property('count', 2);
-                            res.body.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
-                            res.body.should.have.a.deep.property('total.chf', 2.4);
-                            res.body.should.have.a.deep.property('total.eur', 2);
+                            res.body.should.be.an('object');
 
+                            res.body.should.have.a.property('order');
+                            res.body.order.should.have.a.property('no', 1);
+                            res.body.order.should.have.a.property('items');
+                            res.body.order.should.not.have.a.property('currency');
+                            res.body.order.items.should.be.an('array').with.lengthOf(1);
+                            res.body.order.items[0].should.have.a.property('count', 2);
+                            res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                            res.body.order.should.have.a.deep.property('total.chf', 2.4);
+                            res.body.order.should.have.a.deep.property('total.eur', 2);
+
+                            res.body.should.have.a.property('limits').that.is.an('object');
+                            res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
+                            var limit1 = res.body.limits[fixtures.limits.limit1._id.toString()];
+                            limit1.should.have.a.property('total', 10);
+                            limit1.should.have.a.property('used', 2);
                         })
                         .expect(200);
                 })
@@ -143,17 +160,25 @@ describe('orders access', function() {
                     return serverSession.put(paths.orderInc)
                         .send({article: fixtures.articles.article2._id})
                         .expect(function (res) {
-                            res.body.should.have.a.property('no', 1);
-                            res.body.should.have.a.property('items');
-                            res.body.should.not.have.a.property('currency');
-                            res.body.items.should.be.an('array').with.lengthOf(2);
-                            res.body.items[0].should.have.a.property('count', 2);
-                            res.body.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
-                            res.body.items[1].should.have.a.property('count', 1);
-                            res.body.items[1].should.have.a.deep.property('article._id', fixtures.articles.article2._id.toHexString());
-                            res.body.should.have.a.deep.property('total.chf', 4.8);
-                            res.body.should.have.a.deep.property('total.eur', 4);
+                            res.body.should.be.an('object');
 
+                            res.body.should.have.a.property('order');
+                            res.body.order.should.have.a.property('no', 1);
+                            res.body.order.should.have.a.property('items');
+                            res.body.order.should.not.have.a.property('currency');
+                            res.body.order.items.should.be.an('array').with.lengthOf(2);
+                            res.body.order.items[0].should.have.a.property('count', 2);
+                            res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                            res.body.order.items[1].should.have.a.property('count', 1);
+                            res.body.order.items[1].should.have.a.deep.property('article._id', fixtures.articles.article2._id.toHexString());
+                            res.body.order.should.have.a.deep.property('total.chf', 4.8);
+                            res.body.order.should.have.a.deep.property('total.eur', 4);
+
+                            res.body.should.have.a.property('limits').that.is.an('object');
+                            res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
+                            var limit1 = res.body.limits[fixtures.limits.limit1._id.toString()];
+                            limit1.should.have.a.property('total', 10);
+                            limit1.should.have.a.property('used', 2);
                         })
                         .expect(200);
                 })
@@ -164,14 +189,23 @@ describe('orders access', function() {
             serverSession.put(paths.orderDec)
                 .send({article : fixtures.articles.article2._id})
                 .expect(function(res){
-                    res.body.should.have.a.property('no', 1);
-                    res.body.should.have.a.property('items');
-                    res.body.should.not.have.a.property('currency');
-                    res.body.items.should.be.an('array').with.lengthOf(1);
-                    res.body.items[0].should.have.a.property('count', 2);
-                    res.body.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
-                    res.body.should.have.a.deep.property('total.chf', 2.4);
-                    res.body.should.have.a.deep.property('total.eur', 2);
+                    res.body.should.be.an('object');
+
+                    res.body.should.have.a.property('order');
+                    res.body.order.should.have.a.property('no', 1);
+                    res.body.order.should.have.a.property('items');
+                    res.body.order.should.not.have.a.property('currency');
+                    res.body.order.items.should.be.an('array').with.lengthOf(1);
+                    res.body.order.items[0].should.have.a.property('count', 2);
+                    res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                    res.body.order.should.have.a.deep.property('total.chf', 2.4);
+                    res.body.order.should.have.a.deep.property('total.eur', 2);
+
+                    res.body.should.have.a.property('limits').that.is.an('object');
+                    res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
+                    var limit1 = res.body.limits[fixtures.limits.limit1._id.toString()];
+                    limit1.should.have.a.property('total', 10);
+                    limit1.should.have.a.property('used', 2);
                 })
                 .expect(200)
                 .then(function(){

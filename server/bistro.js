@@ -126,6 +126,15 @@ module.exports = function(dbConnection) {
         return deferred.promise;
     };
 
+    var addNewLimits = function(order){
+        return getAggregatedLimits().then(function(limits){
+            return {
+                limits: limits,
+                order: order
+            };
+        });
+    };
+
     var ensureLimitsNotReached = function(articleId, incAmount){
         var deferred = q.defer();
         if (incAmount <= 0) {
@@ -184,6 +193,7 @@ module.exports = function(dbConnection) {
 
     app.put('/order/inc', function(req, res){
         handleIncRequest(req, 1)
+            .then(addNewLimits)
             .catch(handleError(res))
             .done(addToBody(res));
 
@@ -191,6 +201,7 @@ module.exports = function(dbConnection) {
 
     app.put('/order/dec', function(req, res){
         handleIncRequest(req, -1)
+            .then(addNewLimits)
             .catch(handleError(res))
             .done(addToBody(res));
     });
