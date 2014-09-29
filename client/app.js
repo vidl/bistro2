@@ -5,7 +5,8 @@ angular.module('bistro', [
   'ui.router',
   'bistro.cashbox',
   'bistro.articles',
-  'bistro.limits'
+  'bistro.limits',
+  'bistro.orders'
 ])
 
 .config(['$urlRouterProvider', function($urlRouterProvider) {

@@ -126,15 +126,6 @@ module.exports = function(dbConnection) {
         return deferred.promise;
     };
 
-    var addNewLimits = function(order){
-        return getAggregatedLimits().then(function(limits){
-            return {
-                limits: limits,
-                order: order
-            };
-        });
-    };
-
     var populate = function(what){
         return function(model){
             var deferred = q.defer();
@@ -188,10 +179,9 @@ module.exports = function(dbConnection) {
                 return getOrderFromSession(req);
             })
             .then(function(order){
-            var articleId = req.param('article');
-            incArticle(order, articleId, incAmount);
-            return saveDocument(order);
-        });
+                incArticle(order, articleId, incAmount);
+                return saveDocument(order);
+            });
     };
 
 
@@ -211,7 +201,22 @@ module.exports = function(dbConnection) {
     app.put('/order', function(req, res){
         handleIncRequest(req)
             .then(populate('items.article'))
-            .then(addNewLimits)
+            .then(function(order){
+                // update the kitchen state
+                order.kitchen = _.reduce(order.items, function(kitchen, item){
+                    return kitchen || item.article.kitchen;
+                }, false);
+                return saveDocument(order);
+            })
+            .then(function(order){
+                // add the new limits to the response object
+                return getAggregatedLimits().then(function(limits){
+                    return {
+                        limits: limits,
+                        order: order
+                    };
+                });
+            })
             .catch(handleError(res))
             .done(addToBody(res));
 

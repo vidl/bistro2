@@ -1,6 +1,7 @@
 var mongoose = require('mongoose');
 var Schema = mongoose.Schema;
 var restify = require('express-restify-mongoose');
+var timestamps = require('mongoose-timestamp');
 var _ = require('underscore');
 
 module.exports = function(db){
@@ -48,6 +49,7 @@ module.exports = function(db){
         })
     };
 
+    schema.order.plugin(timestamps);
 
     var model = {
         setting: mongoose.model('Setting', schema.setting, 'settings'),

@@ -1,0 +1,25 @@
+<div class="page-header">
+    <h1>Limitierte Zutaten</h1>
+</div>
+<table class="table table-striped table-hover">
+    <thead>
+    <tr>
+        <th>Offen</th>
+        <th>Nummer</th>
+        <th>Geändert</th>
+        <th>Küche</th>
+    </tr>
+    </thead>
+    <tbody>
+     <tr ng-repeat="order in orders" ng-click="showDetail(order)" class="cursor-hand">
+         <td><span class="glyphicon glyphicon-ok" ng-hide="order.currency"></span></td>
+         <td>{{order.no}}</td>
+         <td>{{order.updatedAt | bistroFromNow}}</td>
+         <td><span class="glyphicon glyphicon-ok" ng-show="order.kitchen"></span></td>
+     </tr>
+    </tbody>
+</table>
+
+<div>
+
+</div>

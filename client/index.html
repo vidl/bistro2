@@ -20,6 +20,7 @@
     <li ui-sref-active="active"><a ui-sref="cashbox">Kasse</a></li>
     <li ui-sref-active="active"><a ui-sref="articles">Artikel</a></li>
     <li ui-sref-active="active"><a ui-sref="limits">Limitierte Zutaten</a></li>
+    <li ui-sref-active="active"><a ui-sref="orders">Bestellungen</a></li>
 </ul>
 <div class="container-fluid" ui-view=>
 </div>
@@ -30,7 +31,9 @@
 <script src="bower_components/angular-resource/angular-resource.js"></script>
 <script src="bower_components/angular-mocks/angular-mocks.js"></script>
 <script src="bower_components/underscore/underscore.js"></script>
+<script src="bower_components/moment/moment.js"></script>
 <!-- endbower -->
+<script src="bower_components/moment/locale/de.js"></script>
 <!-- @@NG_SCRIPTS_START@@ -->
 <script src="app.js"></script>
 <script src="articles/articles.js"></script>
@@ -38,7 +41,10 @@
 <script src="components/currency/currency.js"></script>
 <script src="components/currency/currencyDirective.js"></script>
 <script src="components/currency/currencyFilter.js"></script>
+<script src="components/date/date.js"></script>
+<script src="components/date/dateFilter.js"></script>
 <script src="limits/limits.js"></script>
+<script src="orders/orders.js"></script>
 <!-- @@NG_SCRIPTS_END@@ -->
 </body>
 </html>

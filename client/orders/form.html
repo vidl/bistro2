@@ -1,0 +1,44 @@
+<div class="page-header">
+    <h1>Bestellung {{order.no}}</h1>
+</div>
+<div class="row">
+    <form class="form-horizontal col-sm-8" role="form">
+        <div class="panel panel-default">
+            <div class="panel-heading">Kopfdaten</div>
+            <div class="panel-body">
+
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Nummer</label>
+
+                    <div class="col-sm-10">
+                        <p class="form-control-static">{{order.no}}</p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Küche</label>
+
+                    <div class="col-sm-10">
+                        <p class="form-control-static"><span class="glyphicon glyphicon-ok" ng-show="order.kitchen"></span></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="panel panel-default">
+            <div class="panel-heading">Artikel</div>
+            <div class="panel-body">
+                <div class="form-group">
+                    <label ng-repeat-start="item in order.items" class="col-sm-2 control-label text-right">{{item.count}}x</label>
+                    <div ng-repeat-end class="col-sm-10">
+                        <p class="form-control-static">{{item.article.name}}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-12">
+                <a ui-sref="orders" class="btn btn-primary">Zurück</a>
+                <button class="btn btn-danger pull-right" ng-click="remove()" ng-show="order._id">L&ouml;schen</button>
+            </div>
+        </div>
+    </form>
+</div>
