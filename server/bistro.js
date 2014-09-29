@@ -74,7 +74,7 @@ module.exports = function(dbConnection) {
             }
         }
         if (req.session.orderId) {
-            dataService.model.order.findById(req.session.orderId).populate('items.article', resolveOrReject);
+            dataService.model.order.findById(req.session.orderId, resolveOrReject);
         } else {
             dataService.model.order.create({}, resolveOrReject);
         }
@@ -202,6 +202,7 @@ module.exports = function(dbConnection) {
 
     app.get('/order', function(req, res){
         getOrderFromSession(req)
+            .then(populate('items.article'))
             .catch(handleError(res))
             .done(addToBody(res));
     });

@@ -38,4 +38,10 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
                 $scope.availability = data.limits;
             });
         };
+        $scope.dec = function(article){
+            $http.put('/order/dec', {article: article._id}).success(function(data){
+                $scope.order = data.order;
+                $scope.availability = data.limits;
+            });
+        };
     }]);
