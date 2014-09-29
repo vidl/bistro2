@@ -13,8 +13,8 @@ describe('orders access', function() {
         orders: '/api/v1/orders',
         ordersCount: '/api/v1/orders/count',
         order: '/order',
-        orderInc: '/order/inc',
-        orderDec: '/order/dec'
+        orderInc: '/order',
+        orderDec: '/order'
     };
     var app = testBistro.app;
 
@@ -111,7 +111,7 @@ describe('orders access', function() {
 
         it('can add an article using put on /order/inc', function(done){
             serverSession.put(paths.orderInc)
-                .send({article : fixtures.articles.article1._id})
+                .send({article: fixtures.articles.article1._id, incAmount: 1})
                 .expect(function(res){
                     res.body.should.be.an('object');
 
@@ -134,7 +134,7 @@ describe('orders access', function() {
                 .expect(200)
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article: fixtures.articles.article1._id})
+                        .send({article: fixtures.articles.article1._id, incAmount: 1})
                         .expect(function (res) {
                             res.body.should.be.an('object');
 
@@ -158,7 +158,7 @@ describe('orders access', function() {
                 })
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article: fixtures.articles.article2._id})
+                        .send({article: fixtures.articles.article2._id, incAmount: 1})
                         .expect(function (res) {
                             res.body.should.be.an('object');
 
@@ -187,7 +187,7 @@ describe('orders access', function() {
 
         it('can remove an article using put on /order/dec', function(done) {
             serverSession.put(paths.orderDec)
-                .send({article : fixtures.articles.article2._id})
+                .send({article: fixtures.articles.article2._id, incAmount: -1})
                 .expect(function(res){
                     res.body.should.be.an('object');
 
@@ -210,7 +210,7 @@ describe('orders access', function() {
                 .expect(200)
                 .then(function(){
                     return serverSession.put(paths.orderDec)
-                        .send({article: fixtures.articles.article2._id})
+                        .send({article: fixtures.articles.article2._id, incAmount: -1})
                         .expect(480)
                         .expect(function(res){
                             res.body.should.be.an('object');

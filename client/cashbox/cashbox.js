@@ -32,14 +32,8 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
             $scope.order = data;
         });
 
-        $scope.inc = function(article){
-            $http.put('/order/inc', {article: article._id}).success(function(data){
-                $scope.order = data.order;
-                $scope.availability = data.limits;
-            });
-        };
-        $scope.dec = function(article){
-            $http.put('/order/dec', {article: article._id}).success(function(data){
+        $scope.inc = function(article, incAmount){
+            $http.put('/order', {article: article._id, incAmount:incAmount}).success(function(data){
                 $scope.order = data.order;
                 $scope.availability = data.limits;
             });

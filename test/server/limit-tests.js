@@ -12,8 +12,8 @@ describe('limit logic', function() {
     var paths = {
         availability: '/availability',
         order: '/order',
-        orderInc: '/order/inc',
-        orderDec: '/order/dec'
+        orderInc: '/order',
+        orderDec: '/order'
     };
     var app = testBistro.app;
 
@@ -94,7 +94,7 @@ describe('limit logic', function() {
         });
         it('increases the use count of a limit in case of orders', function(done){
             serverSession.put(paths.orderInc)
-                .send({article : fixtures.articles.article1._id})
+                .send({article: fixtures.articles.article1._id, incAmount: 1})
                 .expect(200)
                 .then(function(){
                     return serverSession.get(paths.availability)
@@ -106,7 +106,7 @@ describe('limit logic', function() {
                 })
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article : fixtures.articles.article1._id})
+                        .send({article: fixtures.articles.article1._id, incAmount: 1})
                         .expect(200);
                 })
                 .then(function(){
@@ -119,7 +119,7 @@ describe('limit logic', function() {
                 })
                     .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article : fixtures.articles.article2._id})
+                        .send({article: fixtures.articles.article2._id, incAmount: 1})
                         .expect(200);
                 })
                 .then(function(){
@@ -132,7 +132,7 @@ describe('limit logic', function() {
                 })
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article : fixtures.articles.article3._id})
+                        .send({article: fixtures.articles.article3._id, incAmount: 1})
                         .expect(200);
                 })
                 .then(function(){
@@ -145,7 +145,7 @@ describe('limit logic', function() {
                 })
                 .then(function(){
                     return serverSession.put(paths.orderDec)
-                        .send({article : fixtures.articles.article1._id})
+                        .send({article: fixtures.articles.article1._id, incAmount: -1})
                         .expect(200);
                 })
                 .then(function(){
@@ -161,11 +161,11 @@ describe('limit logic', function() {
 
         it('cannot order more than the limit - attempt will return status code 480', function(done){
             serverSession.put(paths.orderInc)
-                .send({article : fixtures.articles.article1._id})
+                .send({article: fixtures.articles.article1._id, incAmount: 1})
                 .expect(200)
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article : fixtures.articles.article1._id})
+                        .send({article: fixtures.articles.article1._id, incAmount: 1})
                         .expect(200);
                 })
                 .then(function(){
@@ -178,7 +178,7 @@ describe('limit logic', function() {
                 })
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article : fixtures.articles.article1._id})
+                        .send({article: fixtures.articles.article1._id, incAmount: 1})
                         .expect(480);
                 })
                 .then(function(){
@@ -191,7 +191,7 @@ describe('limit logic', function() {
                 })
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article : fixtures.articles.article4._id})
+                        .send({article: fixtures.articles.article4._id, incAmount: 1})
                         .expect(200);
                 })
                 .then(function(){
@@ -204,7 +204,7 @@ describe('limit logic', function() {
                 })
                 .then(function(){
                     return serverSession.put(paths.orderInc)
-                        .send({article : fixtures.articles.article4._id})
+                        .send({article: fixtures.articles.article4._id, incAmount: 1})
                         .expect(480);
                 })
                 .done(noErr(done),done);

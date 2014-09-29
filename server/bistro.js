@@ -180,8 +180,9 @@ module.exports = function(dbConnection) {
         return deferred.promise;
     };
 
-    var handleIncRequest = function (req, incAmount){
+    var handleIncRequest = function (req){
         var articleId = req.param('article');
+        var incAmount = parseInt(req.param('incAmount'));
         return ensureLimitsNotReached(articleId, incAmount)
             .then(function(){
                 return getOrderFromSession(req);
@@ -207,21 +208,13 @@ module.exports = function(dbConnection) {
             .done(addToBody(res));
     });
 
-    app.put('/order/inc', function(req, res){
-        handleIncRequest(req, 1)
+    app.put('/order', function(req, res){
+        handleIncRequest(req)
             .then(populate('items.article'))
             .then(addNewLimits)
             .catch(handleError(res))
             .done(addToBody(res));
 
-    });
-
-    app.put('/order/dec', function(req, res){
-        handleIncRequest(req, -1)
-            .then(populate('items.article'))
-            .then(addNewLimits)
-            .catch(handleError(res))
-            .done(addToBody(res));
     });
 
     app.post('/order', function(req, res){

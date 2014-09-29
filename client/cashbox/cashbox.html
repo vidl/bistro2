@@ -4,8 +4,8 @@
         <div class="panel panel-default">
             <div class="panel-heading">Bestellung</div>
             <div class="panel-body">
-                <table class="table table-condensed">
-                    <tr ng-repeat="item in order.items" ng-click="dec(item.article)">
+                <table class="table table-condensed table-striped table-hover">
+                    <tr class="cursor-hand" ng-repeat="item in order.items" ng-click="inc(item.article,-1)">
                         <td>{{item.count}}</td>
                         <td>{{item.article.name}}</td>
                     </tr>
@@ -19,7 +19,7 @@
             <div class="panel-heading">Gruppe</div>
             <div class="panel-body">
                 <div class="pull-left article" ng-repeat="article in articles">
-                    <div class="btn btn-default btn-block" ng-click="inc(article)">
+                    <div class="btn btn-default btn-block" ng-click="inc(article,1)">
                         <div>{{article.name}}</div>
                         <div><span class="badge">{{available(article)}}</span></div>
                     </div>
