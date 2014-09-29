@@ -3,3 +3,20 @@
 .cursor-hand  {
     cursor: pointer;
 }
+
+.cashbox .article {
+    width: 120px;
+
+    /*padding-top: 20px;*/
+    /*margin-bottom: 20px;*/
+    margin-bottom: 10px;
+    margin-right: 10px;
+}
+
+.cashbox .article > div {
+    height: 70px;
+}
+
+.cashbox .article .badge {
+    background-color: #ccc;
+}
