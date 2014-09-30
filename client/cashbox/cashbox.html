@@ -17,8 +17,10 @@
                 </div>
                 <p class="clearfix"></p>
                 <p><a class="btn btn-block btn-info" ng-click="voucher()">Gutschein</a></p>
-                <a href ng-click="showKitchenNotes = true" ng-hide="showKitchenNotes">Hinweise für die Küche</a>
-                <textarea placeholder="Hinweise für die Küche" class="form-control" rows="5" ng-show="showKitchenNotes" ng-model="order.kitchenNotes"></textarea>
+                <p ng-show="order.kitchen">
+                    <a href ng-click="showKitchenNotes = true" ng-hide="showKitchenNotes">Hinweise für die Küche</a>
+                    <textarea placeholder="Hinweise für die Küche" class="form-control" rows="5" ng-show="showKitchenNotes" ng-model="kitchenNotes"></textarea>
+                </p>
             </div>
         </div>
 

@@ -15,6 +15,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
     .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', function ($scope, Article, $http, availableCurrencies) {
         $scope.articles = Article.query();
         $scope.showKitchenNotes = false;
+        $scope.kitchenNotes = '';
         $scope.availability = {};
         $scope.order = {};
 
@@ -33,6 +34,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
         var newOrderReceived = function(data){
             $scope.order = data;
             $scope.showKitchenNotes = false;
+            $scope.kitchenNotes = undefined;
         };
 
         $http.get('/order').success(newOrderReceived);
@@ -44,12 +46,18 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
             });
         };
 
+        var withKitchenNotes = function(options){
+            if ($scope.order.kitchen) {
+                angular.extend(options, {kitchenNotes: $scope.kitchenNotes});
+            }
+            return options;
+        };
 
         $scope.commit = function(currency) {
-            $http.post('/order', {currency: currency}).success(newOrderReceived);
+            $http.post('/order', withKitchenNotes({currency: currency})).success(newOrderReceived);
         };
 
         $scope.voucher = function() {
-            $http.post('/order', {voucher: true}).success(newOrderReceived);
+            $http.post('/order', withKitchenNotes({voucher: true})).success(newOrderReceived);
         };
     }]);

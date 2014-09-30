@@ -81,9 +81,11 @@ module.exports = function(dbConnection) {
         return deferred.promise;
     };
 
-    var commitOrder = function(currency){
+    var commitOrder = function(req){
         return function(order){
-            order.currency = currency;
+            order.currency = req.param('currency') || dataService.availableCurrencies[0];
+            order.kitchenNotes = req.param('kitchenNotes');
+            order.voucher = req.param('voucher') || false;
             return saveDocument(order);
         };
     };
@@ -221,7 +223,7 @@ module.exports = function(dbConnection) {
 
     app.post('/order', function(req, res){
         getOrderFromSession(req)
-            .then(commitOrder(req.param('currency') || 'chf'))
+            .then(commitOrder(req))
             .then(printOrder(req.param('noPrint')))
             .then(removeOrderFromSession(req))
             .then(function(){

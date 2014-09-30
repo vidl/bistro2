@@ -9,16 +9,23 @@
 
                 <div class="form-group">
                     <label class="col-sm-2 control-label">Nummer</label>
-
                     <div class="col-sm-10">
                         <p class="form-control-static">{{order.no}}</p>
                     </div>
                 </div>
                 <div class="form-group">
                     <label class="col-sm-2 control-label">Küche</label>
-
                     <div class="col-sm-10">
-                        <p class="form-control-static"><span class="glyphicon glyphicon-ok" ng-show="order.kitchen"></span></p>
+                        <p class="form-control-static">
+                            <span class="glyphicon glyphicon-ok" ng-show="order.kitchen"></span>
+                            <span>{{order.kitchenNotes}}</span>
+                        </p>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">Total</label>
+                    <div class="col-sm-10">
+                        <p class="form-control-static">{{order.total[order.currency] | bistroCurrency:order.currency}}<span ng-if="order.voucher"> (Gutschein)</span></p>
                     </div>
                 </div>
             </div>
