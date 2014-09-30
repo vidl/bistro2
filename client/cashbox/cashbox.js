@@ -10,11 +10,14 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
         });
 
     }])
+    .value('voucherCurrency', 'chf')
 
-    .controller('CashboxCtrl', ['$scope', 'Article', '$http', function ($scope, Article, $http) {
+    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', function ($scope, Article, $http, availableCurrencies) {
         $scope.articles = Article.query();
-
+        $scope.showKitchenNotes = false;
         $scope.availability = {};
+        $scope.order = {};
+
         $http.get('/availability').success(function(data){
             $scope.availability = data;
         });
@@ -27,15 +30,26 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
             return available.length ? _.min(available) : undefined;
         };
 
-        $scope.order = {};
-        $http.get('/order').success(function(data){
+        var newOrderReceived = function(data){
             $scope.order = data;
-        });
+            $scope.showKitchenNotes = false;
+        };
 
-        $scope.inc = function(article, incAmount){
+        $http.get('/order').success(newOrderReceived);
+
+        $scope.inc = function(article, incAmount) {
             $http.put('/order', {article: article._id, incAmount:incAmount}).success(function(data){
                 $scope.order = data.order;
                 $scope.availability = data.limits;
             });
+        };
+
+
+        $scope.commit = function(currency) {
+            $http.post('/order', {currency: currency}).success(newOrderReceived);
+        };
+
+        $scope.voucher = function() {
+            $http.post('/order', {voucher: true}).success(newOrderReceived);
         };
     }]);

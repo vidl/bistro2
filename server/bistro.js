@@ -191,6 +191,10 @@ module.exports = function(dbConnection) {
     app.use(session(sessionOptions));
     dataService.addRestRoutes(app);
 
+    app.get('/currencies', function(req, res){
+        res.json(dataService.availableCurrencies);
+    });
+
     app.get('/order', function(req, res){
         getOrderFromSession(req)
             .then(populate('items.article'))
@@ -220,6 +224,9 @@ module.exports = function(dbConnection) {
             .then(commitOrder(req.param('currency') || 'chf'))
             .then(printOrder(req.param('noPrint')))
             .then(removeOrderFromSession(req))
+            .then(function(){
+                return getOrderFromSession(req)
+            })
             .catch(handleError(res))
             .done(addToBody(res));
 

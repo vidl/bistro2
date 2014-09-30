@@ -232,14 +232,11 @@ describe('orders access', function() {
            serverSession.post(paths.order)
                .send({currency: 'eur'})
                .expect(function(res){
-                   res.body.should.have.a.property('no', 1);
+                   res.body.should.have.a.property('no', 2);
                    res.body.should.have.a.property('items');
-                   res.body.items.should.be.an('array').with.lengthOf(1);
-                   res.body.items[0].should.have.a.property('count', 2);
-                   res.body.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
-                   res.body.should.have.a.deep.property('total.chf', 2.4);
-                   res.body.should.have.a.deep.property('total.eur', 2);
-                   res.body.should.have.a.property('currency', 'eur');
+                   res.body.items.should.be.an('array').with.lengthOf(0);
+                   res.body.should.have.a.deep.property('total.chf', 0);
+                   res.body.should.have.a.deep.property('total.eur', 0);
                    res.body.should.have.a.property('kitchen', false);
                })
                .expect(200)

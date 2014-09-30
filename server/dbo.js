@@ -12,6 +12,12 @@ module.exports = function(db){
         limit: { type: Schema.Types.ObjectId, ref: 'Limit' }
     });
 
+    var availableCurrencies = ['chf', 'eur'];
+    var availableCurrenciesDefinition = {};
+    _.each(availableCurrencies, function(currency){
+       availableCurrenciesDefinition[currency] = numberMin0Type;
+    });
+
     var schema = {
         setting: new Schema({
             receiptPrinter: String,
@@ -21,10 +27,7 @@ module.exports = function(db){
         article: new Schema({
             name: String,
             receipt: String,
-            price: {
-                chf: numberMin0Type,
-                eur: numberMin0Type
-            },
+            price: availableCurrenciesDefinition,
             limits: [articleLimit],
             kitchen: Boolean,
             active: Boolean,
@@ -32,16 +35,15 @@ module.exports = function(db){
         }),
         order: new Schema({
             no: Number,
-            currency: { type: String, enum: ['chf', 'eur']},
+            currency: { type: String, enum: availableCurrencies},
+            voucher: Boolean,
             items: [{
                 count: numberMin0Type,
                 article: { type: Schema.Types.ObjectId, ref: 'Article' }
             }],
-            total: {
-                chf: numberMin0Type,
-                eur: numberMin0Type
-            },
-            kitchen: Boolean
+            total: availableCurrenciesDefinition,
+            kitchen: Boolean,
+            kitchenNotes: String
         }),
         limit: new Schema({
             name: String,
@@ -62,7 +64,7 @@ module.exports = function(db){
         var doc = this;
         var removeZeroOrderItems = function(){
             _.each(doc.items, function(item){
-                if (item.count == 0){
+                if (item && item.count == 0){
                     item.remove();
                 }
             });
@@ -155,6 +157,7 @@ module.exports = function(db){
 
             restify.serve(app, model.limit);
         },
-        model: model
+        model: model,
+        availableCurrencies: availableCurrencies
     }
 };
