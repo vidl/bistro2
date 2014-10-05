@@ -35,6 +35,9 @@ module.exports = function(db){
         }),
         order: new Schema({
             no: Number,
+            sessionId: String,
+            state: { type: String, enum: ['editing', 'preordered', 'sent']},
+            name: String,
             currency: { type: String, enum: availableCurrencies},
             voucher: Boolean,
             items: [{
@@ -44,7 +47,7 @@ module.exports = function(db){
             total: availableCurrenciesDefinition,
             kitchen: Boolean,
             kitchenNotes: String
-        }),
+        }, {toObject: { virtuals: true }, toJSON: { virtuals: true }}),
         limit: new Schema({
             name: String,
             available: numberMin0Type
@@ -52,6 +55,9 @@ module.exports = function(db){
     };
 
     schema.order.plugin(timestamps);
+    schema.order.virtual('open', { type: Boolean}).get(function(){
+        return this.currency == undefined;
+    });
 
     var model = {
         setting: mongoose.model('Setting', schema.setting, 'settings'),
@@ -152,6 +158,7 @@ module.exports = function(db){
                 prereq: function(req){
                   return req.method === 'GET' || req.method === 'DELETE';
                 },
+                lean: false, // otherwise, virtuals are not included
                 findOneAndUpdate: false // necessary for calling hooks like pre-save
             });
 

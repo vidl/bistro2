@@ -13,8 +13,11 @@ describe('orders access', function() {
         orders: '/api/v1/orders',
         ordersCount: '/api/v1/orders/count',
         order: '/order',
-        orderInc: '/order',
-        orderDec: '/order'
+        orderItem: '/order/item',
+        orderPreorder: '/order/preorder',
+        orderSelect: '/order/select',
+        orderSend: '/order/send'
+
     };
     var app = testBistro.app;
 
@@ -94,26 +97,30 @@ describe('orders access', function() {
         });
     });
 
-    describe('/order', function(){
-        var serverSession = request.agent(app);
-        it('returns an empty order on get', function(done){
+    var serverSession = request.agent(app);
+    describe('/order', function() {
+        it('returns an empty order on get', function (done) {
             serverSession.get(paths.order)
                 .set('Accept', 'application/json')
                 .expect('Content-Type', /json/)
-                .expect(function(res){
+                .expect(function (res) {
                     res.body.should.be.an('object');
                     res.body.should.have.a.property('_id').that.is.a('string');
                     res.body.should.have.a.property('no', 1);
                     res.body.should.have.a.property('items').that.is.an('array').and.empty;
                     res.body.should.have.a.property('kitchen', false);
+                    res.body.should.have.a.property('state', 'editing');
                 })
                 .expect(200, done);
         });
 
-        it('can add an article using put on /order', function(done){
-            serverSession.put(paths.orderInc)
+    });
+
+    describe('post on /order/item', function() {
+        it('can add an item', function (done) {
+            serverSession.post(paths.orderItem)
                 .send({article: fixtures.articles.article1._id, incAmount: 1})
-                .expect(function(res){
+                .expect(function (res) {
                     res.body.should.be.an('object');
 
                     res.body.should.have.a.property('order');
@@ -126,6 +133,7 @@ describe('orders access', function() {
                     res.body.order.should.have.a.deep.property('total.chf', 1.2);
                     res.body.order.should.have.a.deep.property('total.eur', 1);
                     res.body.order.should.have.a.property('kitchen', false);
+                    res.body.order.should.have.a.property('state', 'editing');
 
                     res.body.should.have.a.property('limits').that.is.an('object');
                     res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -134,8 +142,8 @@ describe('orders access', function() {
                     limit1.should.have.a.property('used', 1);
                 })
                 .expect(200)
-                .then(function(){
-                    return serverSession.put(paths.orderInc)
+                .then(function () {
+                    return serverSession.post(paths.orderItem)
                         .send({article: fixtures.articles.article1._id, incAmount: 1})
                         .expect(function (res) {
                             res.body.should.be.an('object');
@@ -150,6 +158,7 @@ describe('orders access', function() {
                             res.body.order.should.have.a.deep.property('total.chf', 2.4);
                             res.body.order.should.have.a.deep.property('total.eur', 2);
                             res.body.order.should.have.a.property('kitchen', false);
+                            res.body.order.should.have.a.property('state', 'editing');
 
                             res.body.should.have.a.property('limits').that.is.an('object');
                             res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -159,8 +168,8 @@ describe('orders access', function() {
                         })
                         .expect(200);
                 })
-                .then(function(){
-                    return serverSession.put(paths.orderInc)
+                .then(function () {
+                    return serverSession.post(paths.orderItem)
                         .send({article: fixtures.articles.article2._id, incAmount: 1})
                         .expect(function (res) {
                             res.body.should.be.an('object');
@@ -177,6 +186,7 @@ describe('orders access', function() {
                             res.body.order.should.have.a.deep.property('total.chf', 4.8);
                             res.body.order.should.have.a.deep.property('total.eur', 4);
                             res.body.order.should.have.a.property('kitchen', true);
+                            res.body.order.should.have.a.property('state', 'editing');
 
                             res.body.should.have.a.property('limits').that.is.an('object');
                             res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -186,13 +196,13 @@ describe('orders access', function() {
                         })
                         .expect(200);
                 })
-                .done(noErr(done),done);
+                .done(noErr(done), done);
         });
 
-        it('can remove an article using put on /order', function(done) {
-            serverSession.put(paths.orderDec)
+        it('can remove an item', function (done) {
+            serverSession.post(paths.orderItem)
                 .send({article: fixtures.articles.article2._id, incAmount: -1})
-                .expect(function(res){
+                .expect(function (res) {
                     res.body.should.be.an('object');
 
                     res.body.should.have.a.property('order');
@@ -205,6 +215,7 @@ describe('orders access', function() {
                     res.body.order.should.have.a.deep.property('total.chf', 2.4);
                     res.body.order.should.have.a.deep.property('total.eur', 2);
                     res.body.order.should.have.a.property('kitchen', false);
+                    res.body.order.should.have.a.property('state', 'editing');
 
                     res.body.should.have.a.property('limits').that.is.an('object');
                     res.body.limits.should.have.a.property(fixtures.limits.limit1._id.toString());
@@ -213,23 +224,25 @@ describe('orders access', function() {
                     limit1.should.have.a.property('used', 2);
                 })
                 .expect(200)
-                .then(function(){
-                    return serverSession.put(paths.orderDec)
+                .then(function () {
+                    return serverSession.post(paths.orderItem)
                         .send({article: fixtures.articles.article2._id, incAmount: -1})
                         .expect(480)
-                        .expect(function(res){
+                        .expect(function (res) {
                             res.body.should.be.an('object');
                             res.body.should.have.a.property('message', 'Validation failed');
                             res.body.should.have.a.property('errors').that.is.an('object');
                             res.body.errors.should.have.a.property('items.1.count');
                         });
                 })
-                .done(noErr(done),done);
+                .done(noErr(done), done);
 
         });
+    });
 
-        it('can commit an order using post', function(done){
-           serverSession.post(paths.order)
+    describe('post order/send', function(){
+        it('can send an order', function(done){
+           serverSession.post(paths.orderSend)
                .send({currency: 'eur'})
                .expect(function(res){
                    res.body.should.have.a.property('no', 2);
@@ -238,6 +251,7 @@ describe('orders access', function() {
                    res.body.should.have.a.deep.property('total.chf', 0);
                    res.body.should.have.a.deep.property('total.eur', 0);
                    res.body.should.have.a.property('kitchen', false);
+                   res.body.should.have.a.property('state', 'editing');
                })
                .expect(200)
                .then(function(){
@@ -247,15 +261,15 @@ describe('orders access', function() {
                            res.body.should.have.a.property('_id').that.is.a('string');
                            res.body.should.have.a.property('no', 2);
                            res.body.should.have.a.property('items').that.is.an('array').and.empty;
-
+                           res.body.should.have.a.property('state', 'editing');
                        })
                        .expect(200);
                 })
                .done(noErr(done), done);
         });
 
-        it('can commit only with currencies chf and eur', function(done){
-           serverSession.post(paths.order)
+        it('can send only with currencies available currencies', function(done){
+           serverSession.post(paths.orderSend)
                .send({currency: 'dollar'})
                .expect(function(res){
                    res.body.should.be.an('object');
@@ -271,13 +285,179 @@ describe('orders access', function() {
                            res.body.should.have.a.property('_id').that.is.a('string');
                            res.body.should.have.a.property('no', 2);
                            res.body.should.have.a.property('items').that.is.an('array').and.empty;
-
+                           res.body.should.have.a.property('state', 'editing');
                        })
                        .expect(200);
                })
                .done(noErr(done), done);
         });
 
+    });
+
+
+    describe('post order/preorder', function(){
+        before(function (done) {
+            // new game
+            serverSession = request.agent(app);
+            testBistro.fixtures.clearAllAndLoad(fixtures, done);
+        });
+        it('needs a name', function(done){
+            serverSession.post(paths.orderItem)
+                .send({article: fixtures.articles.article1._id, incAmount: 1})
+                .expect(200)
+                .expect(function(res) {
+                    res.body.should.be.an('object');
+                    res.body.should.have.a.property('order');
+                    res.body.order.should.have.a.property('_id').that.is.a('string');
+                    res.body.order.should.have.a.property('no', 1);
+                    res.body.order.should.have.a.property('items').that.is.an('array').with.lengthOf(1);
+                    res.body.order.should.have.a.property('state', 'editing');
+                })
+                .then(function(){
+                    return serverSession.post(paths.orderPreorder)
+                        .send({some: 'arg'})
+                        .expect(480);
+
+                })
+                .done(noErr(done), done);
+        });
+        it('can save an existing order', function(done){
+            serverSession.post(paths.orderPreorder)
+                .send({name: 'test-case'})
+                .expect(function(res){
+                    res.body.should.be.an('object');
+                    res.body.should.have.a.property('_id').that.is.a('string');
+                    res.body.should.have.a.property('no', 2);
+                    res.body.should.have.a.property('items').that.is.an('array').and.empty;
+                    res.body.should.have.a.property('state', 'editing');
+                })
+                .expect(200, done);
+        });
+
+        it('can select a preordered order', function(done){
+            serverSession.get(paths.orders)
+                .expect(function(res) {
+                    res.body.should.be.an('array').with.lengthOf(2);
+                    res.body[0].should.have.a.property('no', 1);
+                    res.body[0].should.have.a.property('state', 'preordered');
+                    res.body[0].should.have.a.property('name', 'test-case');
+
+                    res.body[1].should.have.a.property('no', 2);
+                    res.body[1].should.have.a.property('state', 'editing');
+                }).then(function(res){
+                    return serverSession.post(paths.orderSelect)
+                        .send({order: res.body[0]._id})
+                        .expect(200);
+                }).then(function(){
+                    return serverSession.get(paths.order)
+                        .expect(200)
+                        .expect(function(res){
+                            res.body.should.be.an('object');
+                            res.body.should.have.a.property('_id').that.is.a('string');
+                            res.body.should.have.a.property('no', 1);
+                            res.body.should.have.a.property('items').that.is.an('array').with.lengthOf(1);
+                            res.body.should.have.a.property('state', 'editing');
+                        });
+                }).then(function(){
+                    return serverSession.get(paths.orders)
+                        .expect(200)
+                        .expect(function(res) {
+                            res.body.should.be.an('array').with.lengthOf(1);
+                            res.body[0].should.have.a.property('no', 1);
+                            res.body[0].should.have.a.property('state', 'editing');
+                            res.body[0].should.have.a.property('name', 'test-case');
+                        });
+                })
+                .done(noErr(done), done);
+        });
+
+        it('auto preorders the current non-empty order when selecting an preordered order', function(done){
+            serverSession.post(paths.orderSend)
+                .send({currency: 'chf'})
+                .expect(200)
+                .then(function(){
+                    return serverSession.post(paths.orderItem)
+                        .send({article: fixtures.articles.article2._id, incAmount: 2})
+                        .expect(200)
+                        .expect(function(res){
+                            res.body.should.be.an('object');
+                            res.body.should.have.a.property('order');
+                            res.body.order.should.have.a.property('_id').that.is.a('string');
+                            res.body.order.should.have.a.property('no', 2);
+                            res.body.order.should.have.a.property('items').that.is.an('array').with.lengthOf(1);
+                            res.body.order.should.have.a.property('state', 'editing');
+
+                        });
+                })
+                .then(function(){
+                    return serverSession.post(paths.orderPreorder)
+                        .send({name: 'test-case2'})
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.post(paths.orderItem)
+                        .send({article: fixtures.articles.article1._id, incAmount: 3})
+                        .expect(200)
+                        .expect(function(res){
+                            res.body.should.be.an('object');
+                            res.body.should.have.a.property('order');
+                            res.body.order.should.have.a.property('_id').that.is.a('string');
+                            res.body.order.should.have.a.property('no', 3);
+                            res.body.order.should.have.a.property('items').that.is.an('array').with.lengthOf(1);
+                            res.body.order.should.have.a.property('state', 'editing');
+                        });
+                })
+                .then(function(){
+                    return serverSession.get(paths.orders)
+                        .expect(200)
+                        .expect(function(res){
+                            res.body.should.be.an('array').with.lengthOf(3);
+                            res.body[0].should.have.a.property('no', 1);
+                            res.body[0].should.have.a.property('state', 'sent');
+                            res.body[0].should.have.a.property('name', 'test-case');
+
+                            res.body[1].should.have.a.property('no', 2);
+                            res.body[1].should.have.a.property('state', 'preordered');
+                            res.body[1].should.have.a.property('name', 'test-case2');
+
+                            res.body[2].should.have.a.property('no', 3);
+                            res.body[2].should.have.a.property('state', 'editing');
+                        });
+                })
+                .then(function(res){
+                    return serverSession.post(paths.orderSelect)
+                        .send({order: res.body[1]._id})
+                        .expect(200);
+                })
+                .then(function(){
+                    return serverSession.get(paths.order)
+                        .expect(200)
+                        .expect(function(res){
+                            res.body.should.be.an('object');
+                            res.body.should.have.a.property('_id').that.is.a('string');
+                            res.body.should.have.a.property('no', 2);
+                            res.body.should.have.a.property('items').that.is.an('array').with.lengthOf(1);
+                            res.body.should.have.a.property('state', 'editing');
+                        })
+                })
+                .then(function(){
+                    return serverSession.get(paths.orders)
+                        .expect(200)
+                        .expect(function(res){
+                            res.body.should.be.an('array').with.lengthOf(2);
+                            res.body[0].should.have.a.property('no', 1);
+                            res.body[0].should.have.a.property('state', 'sent');
+                            res.body[0].should.have.a.property('name', 'test-case');
+
+                            res.body[1].should.have.a.property('no', 2);
+                            res.body[1].should.have.a.property('state', 'editing');
+                            res.body[1].should.have.a.property('name', 'test-case2');
+                        });
+
+                })
+                .done(noErr(done),done);
+
+        });
     });
 
 });
