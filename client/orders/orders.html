@@ -14,7 +14,7 @@
     </thead>
     <tbody>
      <tr ng-repeat="order in orders" ng-click="showDetail(order)" class="cursor-hand">
-         <td>{{order.state}}</td>
+         <td>{{orderState[order.state]}}</td>
          <td>{{order.no}}</td>
          <td>{{order.name}}</td>
          <td>{{order.items.length}}</td>

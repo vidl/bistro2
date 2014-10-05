@@ -16,12 +16,14 @@ angular.module('bistro.orders', ['ui.router','ngResource', 'bistro.date'])
             });
 
     }])
+    .value('orderState', {editing: 'erfassen', preordered: 'vorgemerkt', sent: 'gesendet'})
 
     .service('Order', ['$resource', function($resource){
         return $resource('/api/v1/orders/:orderId',{orderId: '@_id'});
     }])
 
-    .controller('OrdersCtrl', ['$scope', 'Order', '$state', function ($scope, Order, $state) {
+    .controller('OrdersCtrl', ['$scope', 'Order', 'orderState', '$state', function ($scope, Order, orderState, $state) {
+        $scope.orderState = orderState;
         $scope.orders = Order.query({sort: '-updatedAt'});
         $scope.showDetail = function(order){
             $state.go('orderDetail', {orderId: order._id});
