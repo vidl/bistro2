@@ -43,7 +43,8 @@
         </div>
         <div class="form-group">
             <div class="col-sm-12">
-                <a ui-sref="orders" class="btn btn-primary">Zurück</a>
+                <a ng-if="order.name && order.open" ng-click="select()" class="btn btn-primary">Auswählen</a>
+                <a ui-sref="orders" class="btn btn-default">Zurück</a>
                 <button class="btn btn-danger pull-right" ng-click="remove()" ng-show="order._id">L&ouml;schen</button>
             </div>
         </div>

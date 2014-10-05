@@ -130,6 +130,7 @@ describe('orders access', function() {
                     res.body.order.items.should.be.an('array').with.lengthOf(1);
                     res.body.order.items[0].should.have.a.property('count', 1);
                     res.body.order.items[0].should.have.a.deep.property('article._id', fixtures.articles.article1._id.toHexString());
+                    res.body.order.items[0].should.have.a.deep.property('article.name', fixtures.articles.article1.name);
                     res.body.order.should.have.a.deep.property('total.chf', 1.2);
                     res.body.order.should.have.a.deep.property('total.eur', 1);
                     res.body.order.should.have.a.property('kitchen', false);

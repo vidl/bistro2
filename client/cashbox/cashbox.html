@@ -2,8 +2,9 @@
 <div class="row cashbox">
     <div class="col-sm-3">
         <div class="panel panel-default">
-            <div class="panel-heading">Bestellung</div>
+            <div class="panel-heading">Bestellung Nr. {{order.no}}</div>
             <div class="panel-body" ng-show="order.items.length">
+                <p ng-if="order.name">{{order.name}}</p>
                 <table class="table table-condensed table-striped table-hover">
                     <tr class="cursor-hand" ng-repeat="item in order.items" ng-click="inc(item.article,-1)">
                         <td>{{item.count}}</td>
@@ -20,6 +21,17 @@
                 <p ng-show="order.kitchen">
                     <a href ng-click="showKitchenNotes = true" ng-hide="showKitchenNotes">Hinweise für die Küche</a>
                     <textarea placeholder="Hinweise für die Küche" class="form-control" rows="5" ng-show="showKitchenNotes" ng-model="kitchenNotes"></textarea>
+                </p>
+                <p>
+                    <a href ng-click="showOrderName = true" ng-hide="showOrderName">Vormerken</a>
+                    <div class="input-group" ng-show="showOrderName">
+                        <form>
+                            <input type="text" class="form-control" ng-model="orderName" placeholder="Bezeichnung">
+                            <span class="input-group-btn">
+                                <button class="btn btn-default" ng-click="save()" ng-disabled="!orderName" type="submit"><span class="glyphicon glyphicon-save"></span></button>
+                            </span>
+                        </form>
+                    </div>
                 </p>
             </div>
         </div>

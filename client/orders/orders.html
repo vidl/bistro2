@@ -4,18 +4,22 @@
 <table class="table table-striped table-hover">
     <thead>
     <tr>
-        <th>Offen</th>
+        <th>Status</th>
         <th>Nummer</th>
-        <th>Geändert</th>
+        <th>Name</th>
+        <th>Anzahl Positionen</th>
         <th>Küche</th>
+        <th>Geändert</th>
     </tr>
     </thead>
     <tbody>
      <tr ng-repeat="order in orders" ng-click="showDetail(order)" class="cursor-hand">
-         <td><span class="glyphicon glyphicon-ok" ng-hide="order.currency"></span></td>
+         <td>{{order.state}}</td>
          <td>{{order.no}}</td>
-         <td>{{order.updatedAt | bistroFromNow}}</td>
+         <td>{{order.name}}</td>
+         <td>{{order.items.length}}</td>
          <td><span class="glyphicon glyphicon-ok" ng-show="order.kitchen"></span></td>
+         <td>{{order.updatedAt | bistroFromNow}}</td>
      </tr>
     </tbody>
 </table>

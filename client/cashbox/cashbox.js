@@ -33,14 +33,16 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
 
         var newOrderReceived = function(data){
             $scope.order = data;
-            $scope.showKitchenNotes = false;
-            $scope.kitchenNotes = undefined;
+            $scope.kitchenNotes = data.kitchenNotes;
+            $scope.showKitchenNotes = data.kitchenNotes ? true : false;
+            $scope.showOrderName = false;
+            $scope.orderName = data.orderName;
         };
 
         $http.get('/order').success(newOrderReceived);
 
         $scope.inc = function(article, incAmount) {
-            $http.put('/order', {article: article._id, incAmount:incAmount}).success(function(data){
+            $http.post('/order/item', {article: article._id, incAmount:incAmount}).success(function(data){
                 $scope.order = data.order;
                 $scope.availability = data.limits;
             });
@@ -54,10 +56,13 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
         };
 
         $scope.commit = function(currency) {
-            $http.post('/order', withKitchenNotes({currency: currency})).success(newOrderReceived);
+            $http.post('/order/send', withKitchenNotes({currency: currency})).success(newOrderReceived);
         };
 
         $scope.voucher = function() {
-            $http.post('/order', withKitchenNotes({voucher: true})).success(newOrderReceived);
+            $http.post('/order/send', withKitchenNotes({voucher: true})).success(newOrderReceived);
+        };
+        $scope.save = function() {
+            $http.post('/order/preorder', withKitchenNotes({name: $scope.orderName})).success(newOrderReceived);
         };
     }]);

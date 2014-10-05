@@ -28,10 +28,15 @@ angular.module('bistro.orders', ['ui.router','ngResource', 'bistro.date'])
         };
     }])
 
-    .controller('OrderCtrl', ['$scope', '$stateParams', 'Order', '$state', function($scope, $stateParams, Order, $state){
+    .controller('OrderCtrl', ['$scope', '$stateParams', 'Order', '$state', '$http', function($scope, $stateParams, Order, $state, $http){
         $scope.order = Order.get(angular.extend($stateParams, {populate: 'items.article'}));
         $scope.remove = function(){
             $scope.order.$remove();
             $state.go('orders');
+        };
+        $scope.select = function() {
+            $http.post('/order/select', {order: $scope.order._id}).success(function(){
+                $state.go('cashbox');
+            });
         };
     }]);

@@ -270,7 +270,7 @@ module.exports = function(dbConnection) {
             })
             .then(setOrderState('editing'))
             .then(saveDocument)
-            //.then(populate('items.article'))
+            .then(populate('items.article'))
             .then(function(order){
                 // add the new limits to the response object
                 return getAggregatedLimits().then(function(limits){
@@ -315,7 +315,7 @@ module.exports = function(dbConnection) {
                 if (!order){
                     throw new Error('Keine Bestellung gewählt')
                 }
-                order.currency = req.param('currency');
+                order.currency = req.param('currency') || dataService.availableCurrencies[0];
                 order.kitchenNotes = req.param('kitchenNotes') || order.kitchenNotes;
                 order.voucher = req.param('voucher') || false;
                 return order;
