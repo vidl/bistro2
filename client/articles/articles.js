@@ -5,7 +5,7 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider
             .state('articles',{
-                url: '/articles',
+                url: '/articles?group',
                 templateUrl: 'articles/articles.html',
                 controller: 'ArticlesCtrl'
             })
@@ -21,12 +21,28 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
         return $resource('/api/v1/articles/:articleId',{articleId: '@_id'});
     }])
 
-    .controller('ArticlesCtrl', ['$scope', 'Article', 'availableCurrencies', '$state', function ($scope, Article, availableCurrencies, $state) {
-        $scope.articles = Article.query({populate: 'limits.limit'});
+    .controller('ArticlesCtrl', ['$scope', '$stateParams', 'Article', 'availableCurrencies', '$state', function ($scope, $stateParams, Article, availableCurrencies, $state) {
+
+        Article.query({populate: 'limits.limit'}, function(articles){
+            $scope.articlesByGroup = _.groupBy(articles, function(article){
+                return  article.group || 'keine Gruppe';
+            });
+            var group = $stateParams.group || _.keys($scope.articlesByGroup)[0];
+            var articles = $scope.articlesByGroup[group];
+            $scope.filter(group, articles);
+        });
+
         $scope.availableCurrencies = availableCurrencies;
+
         $scope.showDetail = function(article){
             $state.go('articleDetail', {articleId: article._id});
         };
+
+        $scope.filter = function(group, articles){
+            $scope.articles = articles;
+            $scope.selectedGroup = group;
+        };
+
     }])
 
     .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article','Limit', 'availableCurrencies', '$state', function($scope, $stateParams, Article, Limit, availableCurrencies, $state){
@@ -55,7 +71,7 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
 
         $scope.save = function() {
             $scope.article.$save();
-            $state.go('articles');
+            $state.go('articles', {group: $scope.article.group});
         };
 
         $scope.remove = function(){

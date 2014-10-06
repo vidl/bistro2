@@ -13,7 +13,18 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
     .value('voucherCurrency', 'chf')
 
     .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', function ($scope, Article, $http, availableCurrencies) {
-        $scope.articles = Article.query();
+
+        Article.query({populate: 'limits.limit'}, function(articles){
+            $scope.articlesByGroup = _.groupBy(articles, function(article){
+                return article.group || 'keine Gruppe';
+            });
+        });
+
+        $scope.select = function(group, articles){
+            $scope.selectedGroup = group;
+            $scope.articles = articles;
+        };
+
         $scope.showKitchenNotes = false;
         $scope.kitchenNotes = '';
         $scope.availability = {};

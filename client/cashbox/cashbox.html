@@ -38,14 +38,16 @@
 
     </div>
     <div class="col-sm-9">
+        <div class="btn-group">
+            <button type="button" class="btn" ng-class="{'btn-default': group != selectedGroup, 'btn-primary': group == selectedGroup }" ng-repeat="(group,articles) in articlesByGroup" ng-click="select(group,articles)">{{group}}</button>
+        </div>
         <div class="panel panel-default">
-            <div class="panel-heading">Gruppe</div>
+            <div class="panel-heading">{{selectedGroup}}</div>
             <div class="panel-body">
-                <div class="pull-left article" ng-repeat="article in articles">
-                    <div class="btn btn-default btn-block" ng-click="inc(article,1)">
-                        <div>{{article.name}}</div>
-                        <div><span class="badge">{{available(article)}}</span></div>
-                    </div>
+                <div class="article pull-left" ng-repeat="article in articles">
+                    <a class="btn btn-default btn-block" ng-click="inc(article,1)">
+                        {{article.name}} <span class="badge">{{available(article)}}</span>
+                    </a>
                 </div>
             </div>
         </div>

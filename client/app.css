@@ -13,8 +13,9 @@
     margin-right: 10px;
 }
 
-.cashbox .article > div {
+.cashbox .article > a {
     height: 70px;
+    white-space: normal;
 }
 
 .cashbox .article .badge {

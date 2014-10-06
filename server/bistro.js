@@ -142,7 +142,7 @@ module.exports = function(dbConnection) {
         function aggregateUsed(total, orders){
             _.each(orders, function(order){
                 _.each(order.items, function(item){
-                    _.each(item.article.limits, function(articleLimit){
+                    _.each(item.article.limits || [], function(articleLimit){
                         var limitId = articleLimit.limit.toHexString();
                         total[limitId].used += articleLimit.dec * item.count;
                     });
