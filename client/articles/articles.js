@@ -48,7 +48,11 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
     .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article','Limit', 'availableCurrencies', '$state', function($scope, $stateParams, Article, Limit, availableCurrencies, $state){
         $scope.availableCurrencies = availableCurrencies;
         if ($stateParams.articleId){
-            $scope.article = Article.get(angular.extend($stateParams, {populate: 'limits.limit'}));
+            $scope.article = Article.get(angular.extend($stateParams, {populate: 'limits.limit'}), function(){
+                if (!$scope.article.limits) {
+                    $scope.article.limits = [];
+                }
+            });
         } else {
             $scope.article = new Article();
             $scope.article.limits = [];
