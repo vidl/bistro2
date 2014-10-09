@@ -4,6 +4,16 @@ var restify = require('express-restify-mongoose');
 var timestamps = require('mongoose-timestamp');
 var _ = require('underscore');
 
+function findOneOrCreate(schema) {
+    schema.statics.findOneOrCreate = function findOneOrCreate(condition, doc) {
+        var self = this;
+
+        return self.findOne(condition).exec().then(function(result){
+            return result ? result : self.create(doc);
+        });
+    };
+}
+
 module.exports = function(db){
 
     var numberMin0Type = { type: Number, min: 0};
@@ -20,8 +30,10 @@ module.exports = function(db){
 
     var schema = {
         setting: new Schema({
-            receiptPrinter: String,
-            orderPrinter: String
+            name: String,
+            desc: String,
+            value: String,
+            type: { type: String, enum: ['Printer']}
         }),
         articleLimit: articleLimit,
         article: new Schema({
@@ -46,7 +58,11 @@ module.exports = function(db){
             }],
             total: availableCurrenciesDefinition,
             kitchen: Boolean,
-            kitchenNotes: String
+            kitchenNotes: String,
+            printRequested: {
+                kitchen: Boolean,
+                receipt: Boolean
+            }
         }, {toObject: { virtuals: true }, toJSON: { virtuals: true }}),
         limit: new Schema({
             name: String,
@@ -58,6 +74,8 @@ module.exports = function(db){
     schema.order.virtual('open', { type: Boolean}).get(function(){
         return this.currency == undefined;
     });
+
+    schema.setting.plugin(findOneOrCreate);
 
     var model = {
         setting: mongoose.model('Setting', schema.setting, 'settings'),

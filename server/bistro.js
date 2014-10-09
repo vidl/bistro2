@@ -6,6 +6,8 @@ var methodOverride = require('method-override');
 var _ = require('underscore');
 var dbo = require('./dbo');
 var q = require('q');
+var print = require('./print');
+var wrapMpromise = require('./wrapMPromise')
 
 var sessionOptions = {
     secret: uid2(25),
@@ -60,6 +62,14 @@ function setOrderState(state){
     };
 }
 
+function requestPrint(requests){
+    return function(order){
+        order.printRequested.kitchen = requests.kitchen || false;
+        order.printRequested.receipt = requests.receipt || false;
+        return order;
+    };
+}
+
 function incItem(order, articleId, incAmount){
     var item = _.find(order.items, function(item){
         return item.article.equals(articleId);
@@ -71,10 +81,6 @@ function incItem(order, articleId, incAmount){
         item.count += incAmount;
     }
     return item;
-}
-
-function removeOrderFromSession(req){
-    delete req.session.orderId;
 }
 
 function getOrderIdFromSession(req){
@@ -95,9 +101,10 @@ function wrapMpromise(mongoosePromise){
     return deferred.promise;
 }
 
-module.exports = function(dbConnection) {
+module.exports = function(dbConnection, disablePrinting) {
 
     var dataService = dbo(dbConnection);
+    var printService = print({dataService: dataService, disablePrinting: disablePrinting});
 
     var createOrder = function(){
         return wrapMpromise(dataService.model.order.create({state: 'editing'}));
@@ -118,16 +125,6 @@ module.exports = function(dbConnection) {
             .then(function(order){
                 return order ? order : createOrder();
             });
-    };
-
-
-    var printOrder = function(noPrint){
-        return function(order){
-            var deferred = q.defer();
-            // TODO printing
-            deferred.resolve(order);
-            return deferred.promise;
-        };
     };
 
     var getAggregatedLimits = function(){
@@ -213,6 +210,12 @@ module.exports = function(dbConnection) {
 
     app.get('/currencies', function(req, res){
         res.json(dataService.availableCurrencies);
+    });
+
+    app.get('/availablePrinters', function(req, res){
+       printService.getPrinters()
+           .catch(handleError(res))
+           .done(addToBody(res));
     });
 
     app.get('/order', function(req, res){
@@ -310,6 +313,7 @@ module.exports = function(dbConnection) {
     });
 
     app.post('/order/send', function(req, res){
+        var noPrint = req.param('noPrint') || false;
         getOrder(getOrderIdFromSession(req))
             .then(function(order){
                 if (!order){
@@ -321,8 +325,8 @@ module.exports = function(dbConnection) {
                 return order;
             })
             .then(setOrderState('sent'))
+            .then(requestPrint({kitchen: !noPrint, receipt: !noPrint}))
             .then(saveDocument)
-            .then(printOrder(req.param('noPrint')))
             .then(createOrder)
             .then(function(order){
                 setOrderIdToSession(req, order);
@@ -331,6 +335,18 @@ module.exports = function(dbConnection) {
             .catch(handleError(res))
             .done(addToBody(res));
 
+    });
+
+    app.get('/order/print/:request/:order', function(req, res){
+        var printRequest = {};
+        printRequest[req.param('request')] = true;
+        getOrder(req.param('order'))
+            .then(requestPrint(printRequest))
+            .then(saveDocument)
+            .catch(handleError(res))
+            .done(function(){
+                res.json({});
+            });
     });
 
     app.get('/availability', function(req, res){

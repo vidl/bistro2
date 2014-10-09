@@ -269,6 +269,17 @@ describe('orders access', function() {
                .done(noErr(done), done);
         });
 
+        it('submits a print request', function(done){
+            serverSession.get(paths.orders)
+                .expect(function(res){
+                    res.body.should.be.an('array').of.length(2);
+                    res.body[0].should.have.a.property('no', 1);
+                    res.body[0].should.have.a.deep.property('printRequested.kitchen', true);
+                    res.body[0].should.have.a.deep.property('printRequested.receipt', true);
+                })
+                .expect(200, done);
+        });
+
         it('can send only with currencies available currencies', function(done){
            serverSession.post(paths.orderSend)
                .send({currency: 'dollar'})
@@ -372,7 +383,7 @@ describe('orders access', function() {
                 .done(noErr(done), done);
         });
 
-        it('auto preorders the current non-empty order when selecting an preordered order', function(done){
+        it('discard the current non-empty order when selecting an preordered order', function(done){
             serverSession.post(paths.orderSend)
                 .send({currency: 'chf'})
                 .expect(200)
