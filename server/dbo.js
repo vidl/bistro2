@@ -67,6 +67,7 @@ module.exports = function(db){
         printJob: new Schema({
             order: { type: Schema.Types.ObjectId, ref: 'Order'},
             type: { type: String, enum: ['kitchen', 'receipt']},
+            pending: Boolean,
             comment: String,
             file: String,
             jobId: String

@@ -5,6 +5,7 @@
     <thead>
     <tr>
         <th>Typ</th>
+        <th>Status</th>
         <th>Bestellung</th>
         <th>Job</th>
         <th>Kommentar</th>
@@ -15,6 +16,7 @@
     <tbody>
     <tr ng-repeat="printJob in printJobs">
         <td>{{printJob.type | translateTypes}}</td>
+        <td><span ng-show="printJob.pending">Offen</span><span ng-hide="printJob.pending">Abgeschlossen</span></td>
         <td><a href ui-sref="orderDetail({orderId: printJob.order._id})" >Nr {{printJob.order.no}}</a></td>
         <td><a href="{{printJob.file}}" ng-show="printJob.jobId">{{printJob.jobId}}</a></td>
         <td>{{printJob.comment}}</td>

@@ -5,7 +5,9 @@ var Q = require('q');
 var shellescape = require('shell-escape');
 var PDFDocument = require('pdfkit');
 var _ = require('underscore');
-var wrapMpromise = require('./wrapMPromise')
+var mongoosePromiseHelper = require('./wrapMPromise')
+var wrapMpromise = mongoosePromiseHelper.wrapMpromise;
+var wrapMongooseCallback = mongoosePromiseHelper.wrapMongooseCallback;
 
 
 function printFile(printer, jobname, file, options) {
@@ -67,16 +69,17 @@ function removeJobFromQueue(jobId) {
 
 }
 
-function getQueue() {
+function getCompletedJobIds() {
     var deferred = Q.defer();
-    childProcess.exec('lpq -a', function(error, stdout, stderr){
+    childProcess.exec('lpstat -W completed', function(error, stdout, stderr){
         if (error != null) {
             deferred.reject(error);
         } else {
             var queue = stdout.split('\n');
-            queue.shift(); // removes the first element (header)
-            queue.pop(); // remove the last (empty) element
-            deferred.resolve(queue);
+            queue.pop(); // remove last
+            deferred.resolve(_.map(queue, function(line){
+                return line.match(/\w+-\d+/)[0];
+            }));
         }
     });
     return deferred.promise;
@@ -106,7 +109,7 @@ module.exports = function(settings) {
 
     var setPrintJobComment = function(printJob, comment) {
         printJob.comment = comment;
-        return wrapMpromise(printJob.save());
+        return wrapMongooseCallback(printJob, printJob.save);
     };
 
     var handlePrintRequest = function(printJob, printerNames){
@@ -156,7 +159,7 @@ module.exports = function(settings) {
 
     var checkForNewPrintRequest = function(){
         var printerNames = {};
-        fetchPrinterNames()
+        return fetchPrinterNames()
             .then(function(data){
                 printerNames = data;
                 return wrapMpromise(
@@ -166,15 +169,22 @@ module.exports = function(settings) {
                 );
             })
             .then(function(printJobs){
-                // TODO chain promises
-                _.each(printJobs, function(printJob){
-                    var promise = handlePrintRequest(printJob, printerNames);
-                });
-            })
-            .catch(function(error){
-                console.log(error.stack);
-            })
-            .done();
+                return Q.all(
+                    _.map(printJobs, function(printJob){
+                        return handlePrintRequest(printJob, printerNames);
+                    })
+                );
+            });
+    };
+
+    var cleanupPendingState = function() {
+        return getCompletedJobIds()
+            .then(function(jobIds){
+                return wrapMpromise(dataService.model.printJob.update(
+                    { $and: [{jobId: { $in: jobIds}}, {pending: true}] }, { pending: false, comment: 'Auftrag abgeschlossen'}, {multi: true})
+                    .exec()
+                );
+            });
     };
 
     if (!fs.existsSync(pdfDirectory)) {
@@ -182,13 +192,20 @@ module.exports = function(settings) {
     }
 
     if (!settings.disablePrinting) {
-        setInterval(checkForNewPrintRequest, interval);
+        setInterval(function() {
+            checkForNewPrintRequest()
+                .then(cleanupPendingState)
+                .catch(function(error){
+                    console.log(error.stack);
+                })
+                .done();
+        }, interval);
     }
 
     var cancelJob = function(id){
         return wrapMpromise(dataService.model.printJob.findOneAndRemove({_id: id}).exec())
             .then(function(printJob){
-                if (printJob && printJob.jobId){
+                if (printJob && printJob.jobId && printJob.pending){
                    return removeJobFromQueue(printJob.jobId);
                 }
             });
@@ -196,7 +213,6 @@ module.exports = function(settings) {
 
 
     return {
-        getQueue: getQueue,
         getPrinters: getPrinters,
         cancelJob: cancelJob
     };

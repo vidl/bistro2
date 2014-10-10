@@ -7,7 +7,9 @@ var _ = require('underscore');
 var dbo = require('./dbo');
 var q = require('q');
 var print = require('./print');
-var wrapMpromise = require('./wrapMPromise')
+var mongoosePromiseHelper = require('./wrapMPromise')
+var wrapMpromise = mongoosePromiseHelper.wrapMpromise;
+var wrapMongooseCallback = mongoosePromiseHelper.wrapMongooseCallback;
 
 var sessionOptions = {
     secret: uid2(25),
@@ -83,16 +85,6 @@ function setOrderIdToSession(req, order){
     req.session.orderId = order._id;
 }
 
-function wrapMpromise(mongoosePromise){
-    var deferred = q.defer();
-    mongoosePromise.then(function(obj){
-        deferred.resolve(obj);
-    }).then(null, function(err){
-        deferred.reject(err);
-    });
-    return deferred.promise;
-}
-
 module.exports = function(dbConnection, disablePrinting) {
 
     var dataService = dbo(dbConnection);
@@ -100,10 +92,14 @@ module.exports = function(dbConnection, disablePrinting) {
 
     var createPrintJob = function(type){
         return function(order){
-            return wrapMpromise(dataService.model.printJob.create({order: order, type: type, comment: 'Auftrag erstellt'}))
-                .then(function(){
-                    return order;
-                });
+            return wrapMpromise(dataService.model.printJob.create({
+                order: order,
+                type: type,
+                pending: true,
+                comment: 'Auftrag erstellt'
+            })).then(function (){
+                return order;
+            });
         };
     };
 
