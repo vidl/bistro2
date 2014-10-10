@@ -54,6 +54,19 @@ function getPrinters() {
     return deferred.promise;
 }
 
+function removeJobFromQueue(jobId) {
+    var deferred = Q.defer();
+    childProcess.exec(shellescape(['cancel',jobId]), function(error, stdout, stderr) {
+        if (error != null) {
+            deferred.reject(error);
+        } else {
+            deferred.resolve(stdout);
+        }
+    });
+    return deferred.promise;
+
+}
+
 function getQueue() {
     var deferred = Q.defer();
     childProcess.exec('lpq -a', function(error, stdout, stderr){
@@ -91,17 +104,29 @@ module.exports = function(settings) {
         return pdfFileName;
     };
 
-    var handlePrintRequest = function(order, printerNames){
-        if (order.printRequested.kitchen) {
-            var pdfName = createKitchenPdf(order);
-            console.log('Print order ' + order.no + ' on ' + printerNames.kitchen);
-            printFile(printerNames.kitchen, createJobname(order, 'kitchen'), pdfName, '-o media=a5 -o fit-to-page')
-                .then(function(){
-                    order.printRequested.kitchen = false;
-                    order.save();
-                });
+    var setPrintJobComment = function(printJob, comment) {
+        printJob.comment = comment;
+        return wrapMpromise(printJob.save());
+    };
+
+    var handlePrintRequest = function(printJob, printerNames){
+        if (!printerNames[printJob.type]) {
+            return setPrintJobComment(printJob, 'Kein Drucker definiert für ' + printJob.type);
         }
-        // todo print on receipt printer
+        if (printJob.type === 'kitchen') {
+            var order = printJob.order;
+            var pdfName = createKitchenPdf(order);
+            return printFile(printerNames[printJob.type], createJobname(order, printJob.type), pdfName, '-o media=a5 -o fit-to-page')
+                .then(function(jobId){
+                    printJob.file = pdfName;
+                    printJob.jobId = jobId.match(/\w+-\d+/);
+                    return setPrintJobComment(printJob,'Auftrag an Durcker gesandt');
+                });
+        } else if (printJob.type === 'receipt') {
+            // todo print on receipt printer
+        } else {
+            return setPrintJobComment(printJob, 'Unbekannter Druck-Typ ' + printJob.type);
+        }
     };
 
     var findOrCreatePrinterSetting = function(settingName, desc, value){
@@ -135,14 +160,15 @@ module.exports = function(settings) {
             .then(function(data){
                 printerNames = data;
                 return wrapMpromise(
-                    dataService.model.order.find()
-                    .or({'printRequested.kitchen': true},{ 'printRequested.receipt': true})
-                    .populate('items.article').exec()
+                    dataService.model.printJob.where('jobId').exists(false)
+                        .populate('order order.items.article')
+                        .exec()
                 );
             })
-            .then(function(orders){
-                _.each(orders, function(order){
-                    handlePrintRequest(order, printerNames);
+            .then(function(printJobs){
+                // TODO chain promises
+                _.each(printJobs, function(printJob){
+                    var promise = handlePrintRequest(printJob, printerNames);
                 });
             })
             .catch(function(error){
@@ -159,12 +185,20 @@ module.exports = function(settings) {
         setInterval(checkForNewPrintRequest, interval);
     }
 
-
+    var cancelJob = function(id){
+        return wrapMpromise(dataService.model.printJob.findOneAndRemove({_id: id}).exec())
+            .then(function(printJob){
+                if (printJob && printJob.jobId){
+                   return removeJobFromQueue(printJob.jobId);
+                }
+            });
+    };
 
 
     return {
         getQueue: getQueue,
-        getPrinters: getPrinters
+        getPrinters: getPrinters,
+        cancelJob: cancelJob
     };
 
 };

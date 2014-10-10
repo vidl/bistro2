@@ -62,14 +62,6 @@ function setOrderState(state){
     };
 }
 
-function requestPrint(requests){
-    return function(order){
-        order.printRequested.kitchen = requests.kitchen || false;
-        order.printRequested.receipt = requests.receipt || false;
-        return order;
-    };
-}
-
 function incItem(order, articleId, incAmount){
     var item = _.find(order.items, function(item){
         return item.article.equals(articleId);
@@ -105,6 +97,15 @@ module.exports = function(dbConnection, disablePrinting) {
 
     var dataService = dbo(dbConnection);
     var printService = print({dataService: dataService, disablePrinting: disablePrinting});
+
+    var createPrintJob = function(type){
+        return function(order){
+            return wrapMpromise(dataService.model.printJob.create({order: order, type: type, comment: 'Auftrag erstellt'}))
+                .then(function(){
+                    return order;
+                });
+        };
+    };
 
     var createOrder = function(){
         return wrapMpromise(dataService.model.order.create({state: 'editing'}));
@@ -325,8 +326,9 @@ module.exports = function(dbConnection, disablePrinting) {
                 return order;
             })
             .then(setOrderState('sent'))
-            .then(requestPrint({kitchen: !noPrint, receipt: !noPrint}))
             .then(saveDocument)
+            .then(createPrintJob('kitchen'))
+            .then(createPrintJob('receipt'))
             .then(createOrder)
             .then(function(order){
                 setOrderIdToSession(req, order);
@@ -337,12 +339,9 @@ module.exports = function(dbConnection, disablePrinting) {
 
     });
 
-    app.get('/order/print/:request/:order', function(req, res){
-        var printRequest = {};
-        printRequest[req.param('request')] = true;
+    app.post('/order/print', function(req, res){
         getOrder(req.param('order'))
-            .then(requestPrint(printRequest))
-            .then(saveDocument)
+            .then(createPrintJob(req.param('type')))
             .catch(handleError(res))
             .done(function(){
                 res.json({});
@@ -353,6 +352,12 @@ module.exports = function(dbConnection, disablePrinting) {
        getAggregatedLimits()
            .catch(handleError(res))
            .done(addToBody(res));
+    });
+
+    app.post('/printJob/cancel', function(req, res){
+        printService.cancelJob(req.param('printJob'))
+            .catch(handleError(res))
+            .done(addToBody(res));
     });
     return app;
 };

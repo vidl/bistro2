@@ -11,6 +11,7 @@ describe('orders access', function() {
 
     var paths = {
         orders: '/api/v1/orders',
+        printJobs: '/api/v1/printJobs',
         ordersCount: '/api/v1/orders/count',
         order: '/order',
         orderItem: '/order/item',
@@ -270,12 +271,11 @@ describe('orders access', function() {
         });
 
         it('submits a print request', function(done){
-            serverSession.get(paths.orders)
+            serverSession.get(paths.printJobs)
                 .expect(function(res){
                     res.body.should.be.an('array').of.length(2);
-                    res.body[0].should.have.a.property('no', 1);
-                    res.body[0].should.have.a.deep.property('printRequested.kitchen', true);
-                    res.body[0].should.have.a.deep.property('printRequested.receipt', true);
+                    res.body[0].should.have.a.property('type', 'kitchen');
+                    res.body[1].should.have.a.property('type', 'receipt');
                 })
                 .expect(200, done);
         });

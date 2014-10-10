@@ -58,30 +58,36 @@ module.exports = function(db){
             }],
             total: availableCurrenciesDefinition,
             kitchen: Boolean,
-            kitchenNotes: String,
-            printRequested: {
-                kitchen: Boolean,
-                receipt: Boolean
-            }
+            kitchenNotes: String
         }, {toObject: { virtuals: true }, toJSON: { virtuals: true }}),
         limit: new Schema({
             name: String,
             available: numberMin0Type
+        }),
+        printJob: new Schema({
+            order: { type: Schema.Types.ObjectId, ref: 'Order'},
+            type: { type: String, enum: ['kitchen', 'receipt']},
+            comment: String,
+            file: String,
+            jobId: String
         })
     };
+
+    schema.setting.plugin(findOneOrCreate);
 
     schema.order.plugin(timestamps);
     schema.order.virtual('open', { type: Boolean}).get(function(){
         return this.currency == undefined;
     });
 
-    schema.setting.plugin(findOneOrCreate);
+    schema.printJob.plugin(timestamps);
 
     var model = {
         setting: mongoose.model('Setting', schema.setting, 'settings'),
         article: mongoose.model('Article', schema.article, 'articles'),
         order: mongoose.model('Order', schema.order, 'orders'),
-        limit: mongoose.model('Limit', schema.limit, 'limits')
+        limit: mongoose.model('Limit', schema.limit, 'limits'),
+        printJob: mongoose.model('PrintJob', schema.printJob, 'printJobs')
     };
 
     schema.order.pre('save', function(next){
@@ -178,6 +184,12 @@ module.exports = function(db){
                 },
                 lean: false, // otherwise, virtuals are not included
                 findOneAndUpdate: false // necessary for calling hooks like pre-save
+            });
+
+            restify.serve(app, model.printJob, {
+               prereq: function(req){
+                   return req.method === 'GET';
+               }
             });
 
             restify.serve(app, model.limit);

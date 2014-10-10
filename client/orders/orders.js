@@ -41,7 +41,7 @@ angular.module('bistro.orders', ['ui.router','ngResource', 'bistro.date'])
                 $state.go('cashbox');
             });
         };
-        $scope.print = function(request){
-            $http.get('/order/print/' + request + '/' + $scope.order._id);
+        $scope.print = function(type){
+            $http.post('/order/print', {type: type, order: $scope.order._id});
         };
     }]);
