@@ -25,7 +25,6 @@ function printFile(printer, jobname, file, options) {
     childProcess.exec(shellescape(args), function(error, stdout, stderr){
         if (error != null) {
             var errorMsg = 'Fehler beim Drucken auf ' + printer + ': ' + stderr;
-            console.log(errorMsg);
             deferred.reject(new Error(errorMsg));
         } else {
             deferred.resolve(stdout);
@@ -78,7 +77,7 @@ function getCompletedJobIds() {
             var queue = stdout.split('\n');
             queue.pop(); // remove last
             deferred.resolve(_.map(queue, function(line){
-                return line.match(/\w+-\d+/)[0];
+                return line.match(/[^ ]+/)[0].match(/\d+$/)[0];
             }));
         }
     });
@@ -119,10 +118,11 @@ module.exports = function(settings) {
         if (printJob.type === 'kitchen') {
             var order = printJob.order;
             var pdfName = createKitchenPdf(order);
-            return printFile(printerNames[printJob.type], createJobname(order, printJob.type), pdfName, '-o media=a5 -o fit-to-page')
+            var printerName = printerNames[printJob.type];
+            return printFile(printerName, createJobname(order, printJob.type), pdfName, '-o media=a5 -o fit-to-page')
                 .then(function(jobId){
                     printJob.file = pdfName;
-                    printJob.jobId = jobId.match(/\w+-\d+/);
+                    printJob.jobId = jobId.match(RegExp(printerName + '[^ ]+'))[0].match(/\d+$/)[0];
                     return setPrintJobComment(printJob,'Auftrag an Durcker gesandt');
                 });
         } else if (printJob.type === 'receipt') {
