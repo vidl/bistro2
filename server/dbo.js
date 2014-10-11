@@ -114,9 +114,9 @@ module.exports = function(db){
             });
         };
         if (doc.isNew){
-            model.order.count(function(err, count){
+            model.order.findOne().sort('-no').exec(function(err, order){
                 if (err) throw err;
-                doc.no = count + 1;
+                doc.no = order.no + 1;
                 removeZeroOrderItems();
                 updateTotalAndKitchen();
             });
