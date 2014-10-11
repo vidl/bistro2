@@ -92,12 +92,12 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
     var printService = print({dataService: dataService, disablePrinting: disablePrinting});
     var pdfService = pdfs(pdfSettings || {});
 
-    var createPrintJob = function(type){
+    var createPrintJob = function(documentType, printerType){
         return function(data){
-            return pdfService[type](data)
+            return pdfService[documentType](data)
                 .then(function(file){
                     return wrapMpromise(dataService.model.printJob.create({
-                        type: type,
+                        type: printerType || documentType,
                         file: file,
                         pending: true,
                         comment: 'Auftrag erstellt'
@@ -134,7 +134,7 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
         function setupTotal(limits){
             var total = {};
             _.each(limits,function(limit){
-                total[limit._id.toHexString()] = { used: 0, total: limit.available};
+                total[limit._id.toHexString()] = { used: 0, total: limit.available, name: limit.name};
             });
             return total;
         }
@@ -203,6 +203,46 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
 
         }
         return deferred.promise;
+    };
+
+    var calculateBalanceAndStatistics = function() {
+        var balanceAndStatistics = {
+            balance: {
+                revenues: {},
+                vouchers: {}
+            },
+            articles: {}
+        };
+        return wrapMpromise(dataService.model.order.find({state: 'sent'}).populate('items.article').exec())
+            .then(function(orders){
+                _.each(dataService.availableCurrencies, function(currency){
+                    balanceAndStatistics.balance.revenues[currency] = 0;
+                    balanceAndStatistics.balance.vouchers[currency] = 0;
+                });
+                _.each(orders, function(order){
+                    if (order.voucher) {
+                        balanceAndStatistics.balance.vouchers[order.currency] += order.total[order.currency];
+                    } else {
+                        balanceAndStatistics.balance.revenues[order.currency] += order.total[order.currency];
+                    }
+                    _.each(order.items, function(item){
+                        var article = balanceAndStatistics.articles[item.article._id];
+                        if (!article) {
+                            balanceAndStatistics.articles[item.article._id] = article = {
+                                name: item.article.name,
+                                group: item.article.group,
+                                count: 0
+                            };
+                        }
+                        article.count += item.count;
+                    });
+                });
+                return getAggregatedLimits();
+            })
+            .then(function(limits){
+                balanceAndStatistics.limits = limits;
+                return balanceAndStatistics;
+            });
     };
 
     var app = express();
@@ -368,6 +408,20 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
         printService.cancelJob(req.param('printJob'))
             .catch(handleError(res))
             .done(addToBody(res));
+    });
+
+    app.get('/balanceAndStatistics', function(req, res){
+        calculateBalanceAndStatistics()
+            .catch(handleError(res))
+            .done(addToBody(res));
+
+    });
+    app.post('/balanceAndStatistics/print', function(req, res){
+        calculateBalanceAndStatistics()
+            .then(createPrintJob('balanceAndStatistics', 'kitchen'))
+            .catch(handleError(res))
+            .done(addToBody(res));
+
     });
     return app;
 };

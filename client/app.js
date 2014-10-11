@@ -8,6 +8,7 @@ angular.module('bistro', [
   'bistro.limits',
   'bistro.orders',
   'bistro.printJobs',
+  'bistro.balanceAndStatistics',
   'bistro.settings'
 ])
 

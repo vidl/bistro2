@@ -22,8 +22,12 @@ function drawBoxedText(doc, text){
         .stroke();
     return doc;
 }
-function currency(amount) {
-    return (amount/100).toFixed(2);
+function formatAmount(amount, currency) {
+    var value = (amount / 100).toFixed(2);
+    if (currency) {
+        value += ' ' + currency.toUpperCase();
+    }
+    return  value;
 }
 
 function writePdf(doc, pdfFileName){
@@ -61,17 +65,17 @@ module.exports = function(settings){
         _.each(order.items, function(item){
             if (item.count == 1) {
                 doc.text(item.article.receipt || item.article.name, {width: cm2pdfUnit(5.5)}).moveUp();
-                doc.text(currency(item.article.price[order.currency]), {align: 'right'});
+                doc.text(formatAmount(item.article.price[order.currency]), {align: 'right'});
             } else {
-                var text = item.count + 'x ' + currency(item.article.price[order.currency]);
-                text += '   ' + currency(item.article.price[order.currency]* item.count);
+                var text = item.count + 'x ' + formatAmount(item.article.price[order.currency]);
+                text += '   ' + formatAmount(item.article.price[order.currency]* item.count);
                 doc.text(text, {align: 'right'}).moveUp();
                 doc.text(item.article.receipt || item.article.name, {width: cm2pdfUnit(4.5), lineGap: 1});
             }
             doc.moveDown(0.5);
         });
         doc.font('Helvetica-Bold').fontSize(10).text('Total').moveUp();
-        doc.text(order.currency.toUpperCase() + ' ' + currency(order.total[order.currency]), {align: 'right'});
+        doc.text(order.currency.toUpperCase() + ' ' + formatAmount(order.total[order.currency]), {align: 'right'});
 
         if (order.kitchenNotes){
             doc.moveDown().text('Hinweise an die Küche:').moveDown(0.5);
@@ -122,12 +126,24 @@ module.exports = function(settings){
         return writePdf(doc, pdfFileName);
     };
 
+    var createBalanceAndStatisticsPdf = function(balanceAndStatistics) {
+        var doc = new PDFDocument({size: 'A4'});
+        doc.font('Helvetica').fontSize(24).text('Umsatz vom Bistro des ' +  moment().format('DD.MM.YYYY'));
+
+        doc.fontSize(12).text('Einnahmen: ' + _.map(balanceAndStatistics.balance.revenues, formatAmount).join(', ')).moveDown();
+        doc.fontSize(12).text('Gutscheine: ' + _.map(balanceAndStatistics.balance.vouchers, formatAmount).join(', ')).moveDown();
+
+        var pdfFileName = pdfDirectory + '/balanceAndStatistics' + moment().format('DD_MM_YYYY') + '.pdf';
+        return writePdf(doc, pdfFileName);
+    };
+
     if (!fs.existsSync(pdfDirectory)) {
         fs.mkdirSync(pdfDirectory);
     }
 
     return {
         kitchen: createKitchenPdf,
-        receipt: createReceiptPdf
+        receipt: createReceiptPdf,
+        balanceAndStatistics: createBalanceAndStatisticsPdf
     };
 };

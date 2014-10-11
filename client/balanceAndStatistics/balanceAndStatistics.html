@@ -1,0 +1,28 @@
+<div class="page-header">
+    <h1>Kassenabschluss und Statistiken</h1>
+</div>
+<div class="row">
+    <div class="col-sm-4">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Kassenabschluss</th>
+                <th ng-repeat="currency in availableCurrencies" class="text-right">{{currency | uppercase}}</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Einnahmen</td>
+                <td ng-repeat="revenue in revenues" class="text-right">{{ revenue.amount | bistroCurrency }}</td>
+            </tr>
+            <tr>
+                <td>Gutscheine</td>
+                <td ng-repeat="voucher in vouchers" class="text-right">{{ voucher.amount | bistroCurrency }}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div>
+    <a class="btn btn-default" role="button" ng-click="print()">Drucken</a>
+</div>
