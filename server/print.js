@@ -84,6 +84,40 @@ function getCompletedJobIds() {
     return deferred.promise;
 }
 
+function cm2pdfUnit(cm) {
+    var inch = cm / 2.54;
+    return inch * 72;
+}
+
+function drawBoxedText(doc, text){
+    var y = doc.y;
+    var textWidth = doc.widthOfString(text);
+    var contentWidth = doc.page.width;
+    doc.text(text, {align: 'center'});
+
+    doc
+        .lineWidth(1)
+        .roundedRect((contentWidth - textWidth)/2 - 5, y - 6, textWidth + 10, doc.y - y + 5, 5)
+        .stroke();
+    return doc;
+}
+function currency(amount) {
+    return (amount/100).toFixed(2);
+}
+
+function writePdf(doc, pdfFileName){
+    var deferred = Q.defer();
+    var writer = fs.createWriteStream(pdfFileName);
+    writer.on('finish', function(){
+        deferred.resolve(pdfFileName);
+    });
+    writer.on('error', function(err){
+       deferred.reject(err);
+    });
+    doc.pipe(writer);
+    doc.end();
+    return deferred.promise;
+}
 module.exports = function(settings) {
 
     var dataService = settings.dataService;
@@ -92,9 +126,50 @@ module.exports = function(settings) {
     var kitchenPrinterSettingName =  'kitchenPrinter';
     var interval = settings.interval || 1000;
 
+    var createReceiptPdf = function(order) {
+        var doc = new PDFDocument({
+            size: [cm2pdfUnit(8),cm2pdfUnit(29)],
+            margin: cm2pdfUnit(0.5)
+        });
+        doc.font('Helvetica').fontSize(12).text('Bistro-Bestellung', {align:'center'}).moveDown();
+        doc.font('Helvetica-Bold').fontSize(16);
+
+        drawBoxedText(doc, 'Nr. ' + order.no).moveDown(0.5);
+        doc.font('Helvetica').fontSize(10).text('vom ' + moment(order._id.getTimestamp()).format('HH:mm DD.MM.YYYY'), {align: 'center'}).moveDown(2);
+
+        doc.font('Helvetica').fontSize(10);
+        var textColWith = cm2pdfUnit(4.5);
+        var colSpace = cm2pdfUnit(0.1);
+        _.each(order.items, function(item){
+            if (item.count == 1) {
+                doc.text(item.article.receipt || item.article.name, {width: cm2pdfUnit(5.5)}).moveUp();
+                doc.text(currency(item.article.price[order.currency]), {align: 'right'});
+            } else {
+                var text = item.count + 'x ' + currency(item.article.price[order.currency]);
+                text += '   ' + currency(item.article.price[order.currency]* item.count);
+                doc.text(text, {align: 'right'}).moveUp();
+                doc.text(item.article.receipt || item.article.name, {width: cm2pdfUnit(4.5), lineGap: 1});
+            }
+            doc.moveDown(0.5);
+        });
+        doc.font('Helvetica-Bold').text('Total').moveUp();
+        doc.text(order.currency.toUpperCase() + ' ' + currency(order.total[order.currency]), {align: 'right'});
+
+        if (order.kitchenNotes){
+            doc.moveDown().text('Hinweise an die Küche:').moveDown(0.5);
+            doc.font('Helvetica');
+            _.each(order.kitchenNotes.split('\n'), function(line){
+                doc.text(line, {indent: doc.page.margins.left});
+            });
+        }
+
+        var pdfFileName = pdfDirectory + '/receipt_' + order.no + '.pdf';
+        return writePdf(doc, pdfFileName);
+
+    };
 
     var createKitchenPdf = function (order) {
-        var doc = new PDFDocument();
+        var doc = new PDFDocument({size: 'A4'});
         doc.font('Helvetica').fontSize(28).text('Bestellung Nummer ' + order.no);
         doc.fontSize(12);
         doc.text('Bestellung aufgegeben um ' + moment(order._id.getTimestamp()).format('HH:mm [am] DD.MM.YYYY'))
@@ -123,9 +198,19 @@ module.exports = function(settings) {
         });
 
         var pdfFileName = pdfDirectory + '/order_' + order.no + '.pdf';
-        doc.pipe(fs.createWriteStream(pdfFileName));
-        doc.end();
-        return pdfFileName;
+        return writePdf(doc, pdfFileName);
+    };
+
+    var printerConfig = {
+        kitchen: {
+            pdfFunc: createKitchenPdf,
+            printOptions: '-o media=a5 -o fit-to-page'
+        },
+        receipt: {
+            pdfFunc: createReceiptPdf,
+            printOptions: ''
+
+        }
     };
 
     var setPrintJobComment = function(printJob, comment) {
@@ -137,18 +222,19 @@ module.exports = function(settings) {
         if (!printerNames[printJob.type]) {
             return setPrintJobComment(printJob, 'Kein Drucker definiert für ' + printJob.type);
         }
-        if (printJob.type === 'kitchen') {
+        var config = printerConfig[printJob.type];
+        if (config) {
             var order = printJob.order;
-            var pdfName = createKitchenPdf(order);
             var printerName = printerNames[printJob.type];
-            return printFile(printerName, createJobname(order, printJob.type), pdfName, '-o media=a5 -o fit-to-page')
+            return config.pdfFunc(order)
+                .then(function(pdfFileName){
+                    printJob.file = pdfFileName;
+                    return printFile(printerName, createJobname(order, printJob.type), pdfFileName, config.printOptions);
+                })
                 .then(function(jobId){
-                    printJob.file = pdfName;
                     printJob.jobId = jobId.match(RegExp(printerName + '[^ ]+'))[0].match(/\d+$/)[0];
-                    return setPrintJobComment(printJob,'Auftrag an Durcker gesandt');
+                    return setPrintJobComment(printJob,'Auftrag an Drucker gesandt');
                 });
-        } else if (printJob.type === 'receipt') {
-            // todo print on receipt printer
         } else {
             return setPrintJobComment(printJob, 'Unbekannter Druck-Typ ' + printJob.type);
         }
