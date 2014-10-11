@@ -45,7 +45,7 @@
             <div class="col-sm-12">
                 <a ng-if="order.name && order.open" ng-click="select()" class="btn btn-primary">Auswählen</a>
                 <a ui-sref="orders" class="btn btn-default">Zurück</a>
-                <a class="btn btn-default" ng-click="print('receipt')">Bon erneut drucken</a>
+                <a class="btn btn-default" ng-click="print('receipt')">Beleg erneut drucken</a>
                 <a class="btn btn-danger" ng-click="print('kitchen')" ng-show="order.kitchen">Bestellung erneut drucken</a>
                 <button class="btn btn-danger pull-right" ng-click="remove()" ng-show="order._id">L&ouml;schen</button>
             </div>

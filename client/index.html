@@ -18,10 +18,10 @@
 <body ng-cloak ng-app="bistro">
 <ul class="nav nav-tabs" role="tablist">
     <li ui-sref-active="active"><a ui-sref="cashbox">Kasse</a></li>
+    <li ui-sref-active="active"><a ui-sref="orders">Bestellungen</a></li>
     <li ui-sref-active="active"><a ui-sref="articles">Artikel</a></li>
     <li ui-sref-active="active"><a ui-sref="limits">Limitierte Zutaten</a></li>
-    <li ui-sref-active="active"><a ui-sref="orders">Bestellungen</a></li>
-    <li ui-sref-active="active"><a ui-sref="printJobs">Druckaufträge</a></li>
+    <li ui-sref-active="active"><a ui-sref="printJobs">Druckaufträge <span class="badge">{{'' | pendingJobsCount }}</span></a></li>
     <li ui-sref-active="active"><a ui-sref="settings">Einstellungen</a></li>
 </ul>
 <div class="container-fluid" ui-view=>
