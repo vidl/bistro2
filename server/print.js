@@ -95,11 +95,33 @@ module.exports = function(settings) {
 
     var createKitchenPdf = function (order) {
         var doc = new PDFDocument();
-        doc.font('Helvetica').fontSize(28).text('Bestellung Nummer ' + order.no).moveDown();
-        doc.fontSize(18);
+        doc.font('Helvetica').fontSize(28).text('Bestellung Nummer ' + order.no);
+        doc.fontSize(12);
+        doc.text('Bestellung aufgegeben um ' + moment(order._id.getTimestamp()).format('HH:mm [am] DD.MM.YYYY'))
+            .moveDown(2);
+
+        if (order.kitchenNotes){
+            doc.fontSize(18);
+            var y = doc.y - 10;
+            _.each(order.kitchenNotes.split('\n'), function(line){
+               doc.text('   ' + line, {width: 400});
+            });
+            doc
+                .lineWidth(1)
+                .roundedRect(doc.x, y, 410, doc.y - y + 5, 5)
+                .stroke()
+            doc.moveDown(1.5);
+        }
+
+        doc.fontSize(22);
         _.each(order.items, function (item) {
-            doc.text(item.count + 'x ' + item.article.name).moveDown();
+            if (item.article.kitchen) {
+                doc.text(item.count + 'x')
+                    .moveUp()
+                    .text(item.article.name, {indent: 40, lineGap: 10});
+            }
         });
+
         var pdfFileName = pdfDirectory + '/order_' + order.no + '.pdf';
         doc.pipe(fs.createWriteStream(pdfFileName));
         doc.end();
@@ -164,8 +186,15 @@ module.exports = function(settings) {
                 printerNames = data;
                 return wrapMpromise(
                     dataService.model.printJob.where('jobId').exists(false)
-                        .populate('order order.items.article')
+                        .populate('order')
                         .exec()
+                );
+            })
+            .then(function(printJobs){
+                return wrapMongooseCallback(
+                    dataService.model.printJob,
+                    dataService.model.printJob.populate,
+                    printJobs, {path: 'order.items.article', model: 'Article'}
                 );
             })
             .then(function(printJobs){
