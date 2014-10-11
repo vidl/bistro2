@@ -6,9 +6,15 @@
             <div class="panel-body" ng-show="order.items.length">
                 <p ng-if="order.name">{{order.name}}</p>
                 <table class="table table-condensed table-striped table-hover">
+                    <tr>
+                        <th>#</th>
+                        <th>Artikel</th>
+                        <th ng-repeat="currency in availableCurrencies">{{currency | uppercase}}</th>
+                    </tr>
                     <tr class="cursor-hand" ng-repeat="item in order.items" ng-click="inc(item.article,-1)">
                         <td>{{item.count}}</td>
                         <td>{{item.article.name}}</td>
+                        <td ng-repeat="(currency, amount) in item.article.price">{{amount | bistroCurrency:''}}</td>
                     </tr>
                 </table>
                 <div>

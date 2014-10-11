@@ -14,6 +14,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
 
     .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', function ($scope, Article, $http, availableCurrencies) {
 
+        $scope.availableCurrencies = availableCurrencies;
         Article.query({populate: 'limits.limit'}, function(articles){
             $scope.articlesByGroup = _.groupBy(articles, function(article){
                 return article.group || 'keine Gruppe';
