@@ -1,23 +1,18 @@
-var fs = require('fs');
 var childProcess = require('child_process');
-var moment = require('moment');
 var Q = require('q');
 var shellescape = require('shell-escape');
-var PDFDocument = require('pdfkit');
 var _ = require('underscore');
 var mongoosePromiseHelper = require('./wrapMPromise')
 var wrapMpromise = mongoosePromiseHelper.wrapMpromise;
 var wrapMongooseCallback = mongoosePromiseHelper.wrapMongooseCallback;
 
 
-function printFile(printer, jobname, file, options) {
+function printFile(printer, file, options) {
     var deferred = Q.defer();
     var args = [];
     args.push('lp');
     args.push('-d');
     args.push(printer);
-    args.push('-t'); // job name
-    args.push(jobname);
     if (options) {
         args.push(options);
     }
@@ -31,14 +26,6 @@ function printFile(printer, jobname, file, options) {
         }
     });
     return deferred.promise;
-}
-
-function createJobname(order, suffix) {
-    var orderId = moment(order._id.getTimestamp()).format('YYYYMMDD-HHmmss');
-    if (order.no)
-        orderId += '-' + order.no;
-    var jobname = orderId + '-' + suffix;
-    return jobname;
 }
 
 function getPrinters() {
@@ -75,7 +62,7 @@ function getCompletedJobIds() {
             deferred.reject(error);
         } else {
             var queue = stdout.split('\n');
-            queue.pop(); // remove last
+            queue.pop(); // remove the last (empty) item
             deferred.resolve(_.map(queue, function(line){
                 return line.match(/[^ ]+/)[0].match(/\d+$/)[0];
             }));
@@ -84,138 +71,16 @@ function getCompletedJobIds() {
     return deferred.promise;
 }
 
-function cm2pdfUnit(cm) {
-    var inch = cm / 2.54;
-    return inch * 72;
-}
-
-function drawBoxedText(doc, text){
-    var y = doc.y;
-    var textWidth = doc.widthOfString(text);
-    var contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
-    doc.text(text, {align: 'center'});
-
-    doc
-        .lineWidth(1)
-        .roundedRect(doc.page.margins.left + (contentWidth - textWidth)/2 - 5, y - 6, textWidth + 10, doc.y - y + 5, 5)
-        .stroke();
-    return doc;
-}
-function currency(amount) {
-    return (amount/100).toFixed(2);
-}
-
-function writePdf(doc, pdfFileName){
-    var deferred = Q.defer();
-    var writer = fs.createWriteStream(pdfFileName);
-    writer.on('finish', function(){
-        deferred.resolve(pdfFileName);
-    });
-    writer.on('error', function(err){
-       deferred.reject(err);
-    });
-    doc.pipe(writer);
-    doc.end();
-    return deferred.promise;
-}
 module.exports = function(settings) {
 
     var dataService = settings.dataService;
-    var pdfDirectory = settings.pdfDirectory || 'pdfs';
     var receiptPrinterSettingName = 'receiptPrinter';
     var kitchenPrinterSettingName =  'kitchenPrinter';
     var interval = settings.interval || 1000;
 
-    var createReceiptPdf = function(order) {
-        var doc = new PDFDocument({
-            size: [cm2pdfUnit(8),cm2pdfUnit(29)],
-            margins: {
-                left: cm2pdfUnit(0.5),
-                right: cm2pdfUnit(0.9),
-                top: cm2pdfUnit(0.5),
-                bottom: cm2pdfUnit(0.5)
-            }
-        });
-        doc.font('Helvetica').fontSize(12).text('Bistro-Bestellung', {align:'center'}).moveDown();
-        doc.font('Helvetica-Bold').fontSize(16);
-
-        drawBoxedText(doc, 'Nr. ' + order.no).moveDown(0.5);
-
-        doc.font('Helvetica').fontSize(8);
-        _.each(order.items, function(item){
-            if (item.count == 1) {
-                doc.text(item.article.receipt || item.article.name, {width: cm2pdfUnit(5.5)}).moveUp();
-                doc.text(currency(item.article.price[order.currency]), {align: 'right'});
-            } else {
-                var text = item.count + 'x ' + currency(item.article.price[order.currency]);
-                text += '   ' + currency(item.article.price[order.currency]* item.count);
-                doc.text(text, {align: 'right'}).moveUp();
-                doc.text(item.article.receipt || item.article.name, {width: cm2pdfUnit(4.5), lineGap: 1});
-            }
-            doc.moveDown(0.5);
-        });
-        doc.font('Helvetica-Bold').fontSize(10).text('Total').moveUp();
-        doc.text(order.currency.toUpperCase() + ' ' + currency(order.total[order.currency]), {align: 'right'});
-
-        if (order.kitchenNotes){
-            doc.moveDown().text('Hinweise an die Küche:').moveDown(0.5);
-            doc.font('Helvetica');
-            _.each(order.kitchenNotes.split('\n'), function(line){
-                doc.text(line);
-            });
-        }
-
-        doc.moveDown(2);
-        doc.font('Helvetica').fontSize(8).text(moment(order._id.getTimestamp()).format('HH:mm DD.MM.YYYY'), {align: 'center'}).moveDown(2);
-        
-        var pdfFileName = pdfDirectory + '/receipt_' + order.no + '.pdf';
-        return writePdf(doc, pdfFileName);
-
-    };
-
-    var createKitchenPdf = function (order) {
-        var doc = new PDFDocument({size: 'A4'});
-        doc.font('Helvetica').fontSize(28).text('Bestellung Nummer ' + order.no);
-        doc.fontSize(12);
-        doc.text('Bestellung aufgegeben um ' + moment(order._id.getTimestamp()).format('HH:mm [am] DD.MM.YYYY'))
-            .moveDown(2);
-
-        if (order.kitchenNotes){
-            doc.fontSize(18);
-            var y = doc.y - 10;
-            _.each(order.kitchenNotes.split('\n'), function(line){
-               doc.text('   ' + line, {width: 400});
-            });
-            doc
-                .lineWidth(1)
-                .roundedRect(doc.x, y, 410, doc.y - y + 5, 5)
-                .stroke()
-            doc.moveDown(1.5);
-        }
-
-        doc.fontSize(22);
-        _.each(order.items, function (item) {
-            if (item.article.kitchen) {
-                doc.text(item.count + 'x')
-                    .moveUp()
-                    .text(item.article.name, {indent: 40, lineGap: 10});
-            }
-        });
-
-        var pdfFileName = pdfDirectory + '/order_' + order.no + '.pdf';
-        return writePdf(doc, pdfFileName);
-    };
 
     var printerConfig = {
-        kitchen: {
-            pdfFunc: createKitchenPdf,
-            printOptions: '-o media=a5 -o fit-to-page'
-        },
-        receipt: {
-            pdfFunc: createReceiptPdf,
-            printOptions: ''
-
-        }
+        kitchen: '-o media=a5 -o fit-to-page'
     };
 
     var setPrintJobComment = function(printJob, comment) {
@@ -224,25 +89,16 @@ module.exports = function(settings) {
     };
 
     var handlePrintRequest = function(printJob, printerNames){
-        if (!printerNames[printJob.type]) {
+        var printerName = printerNames[printJob.type];
+        if (!printerName) {
             return setPrintJobComment(printJob, 'Kein Drucker definiert für ' + printJob.type);
         }
         var config = printerConfig[printJob.type];
-        if (config) {
-            var order = printJob.order;
-            var printerName = printerNames[printJob.type];
-            return config.pdfFunc(order)
-                .then(function(pdfFileName){
-                    printJob.file = pdfFileName;
-                    return printFile(printerName, createJobname(order, printJob.type), pdfFileName, config.printOptions);
-                })
-                .then(function(jobId){
-                    printJob.jobId = jobId.match(RegExp(printerName + '[^ ]+'))[0].match(/\d+$/)[0];
-                    return setPrintJobComment(printJob,'Auftrag an Drucker gesandt');
-                });
-        } else {
-            return setPrintJobComment(printJob, 'Unbekannter Druck-Typ ' + printJob.type);
-        }
+        return printFile(printerName, printJob.file, config)
+            .then(function(jobId){
+                printJob.jobId = jobId.match(RegExp(printerName + '[^ ]+'))[0].match(/\d+$/)[0];
+                return setPrintJobComment(printJob,'Auftrag an Drucker gesendet');
+            });
     };
 
     var findOrCreatePrinterSetting = function(settingName, desc, value){
@@ -275,18 +131,7 @@ module.exports = function(settings) {
         return fetchPrinterNames()
             .then(function(data){
                 printerNames = data;
-                return wrapMpromise(
-                    dataService.model.printJob.where('jobId').exists(false)
-                        .populate('order')
-                        .exec()
-                );
-            })
-            .then(function(printJobs){
-                return wrapMongooseCallback(
-                    dataService.model.printJob,
-                    dataService.model.printJob.populate,
-                    printJobs, {path: 'order.items.article', model: 'Article'}
-                );
+                return wrapMpromise(dataService.model.printJob.where('jobId').exists(false).exec());
             })
             .then(function(printJobs){
                 return Q.all(
@@ -306,10 +151,6 @@ module.exports = function(settings) {
                 );
             });
     };
-
-    if (!fs.existsSync(pdfDirectory)) {
-        fs.mkdirSync(pdfDirectory);
-    }
 
     if (!settings.disablePrinting) {
         setInterval(function() {

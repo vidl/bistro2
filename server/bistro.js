@@ -7,6 +7,7 @@ var _ = require('underscore');
 var dbo = require('./dbo');
 var q = require('q');
 var print = require('./print');
+var pdfs = require('./pdfs');
 var mongoosePromiseHelper = require('./wrapMPromise')
 var wrapMpromise = mongoosePromiseHelper.wrapMpromise;
 var wrapMongooseCallback = mongoosePromiseHelper.wrapMongooseCallback;
@@ -85,21 +86,26 @@ function setOrderIdToSession(req, order){
     req.session.orderId = order._id;
 }
 
-module.exports = function(dbConnection, disablePrinting) {
+module.exports = function(dbConnection, disablePrinting, pdfSettings) {
 
     var dataService = dbo(dbConnection);
     var printService = print({dataService: dataService, disablePrinting: disablePrinting});
+    var pdfService = pdfs(pdfSettings || {});
 
     var createPrintJob = function(type){
-        return function(order){
-            return wrapMpromise(dataService.model.printJob.create({
-                order: order,
-                type: type,
-                pending: true,
-                comment: 'Auftrag erstellt'
-            })).then(function (){
-                return order;
-            });
+        return function(data){
+            return pdfService[type](data)
+                .then(function(file){
+                    return wrapMpromise(dataService.model.printJob.create({
+                        type: type,
+                        file: file,
+                        pending: true,
+                        comment: 'Auftrag erstellt'
+                    }));
+                })
+                .then(function (){
+                    return data;
+                });
         };
     };
 
@@ -323,6 +329,7 @@ module.exports = function(dbConnection, disablePrinting) {
             })
             .then(setOrderState('sent'))
             .then(saveDocument)
+            .then(populate('items.article'))
             .then(function(order){
                 if (order.kitchen) {
                     return createPrintJob('kitchen')(order);
@@ -343,6 +350,7 @@ module.exports = function(dbConnection, disablePrinting) {
 
     app.post('/order/print', function(req, res){
         getOrder(req.param('order'))
+            .then(populate('items.article'))
             .then(createPrintJob(req.param('type')))
             .catch(handleError(res))
             .done(function(){

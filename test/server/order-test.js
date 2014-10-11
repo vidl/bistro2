@@ -273,9 +273,12 @@ describe('orders access', function() {
         it('submits a print request', function(done){
             serverSession.get(paths.printJobs)
                 .expect(function(res){
-                    res.body.should.be.an('array').of.length(2);
-                    res.body[0].should.have.a.property('type', 'kitchen');
-                    res.body[1].should.have.a.property('type', 'receipt');
+                    res.body.should.be.an('array').of.length(1);
+                    res.body[0].should.have.a.property('type', 'receipt');
+                    res.body[0].should.have.a.property('file');
+                    res.body[0].should.have.a.property('pending', true);
+                    // order has no kitchen items
+                    //res.body[0].should.have.a.property('type', 'kitchen');
                 })
                 .expect(200, done);
         });

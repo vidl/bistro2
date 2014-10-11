@@ -29,10 +29,10 @@ angular.module('bistro.printJobs', ['ui.router','ngResource', 'bistro.date'])
 
 
     .controller('PrintJobsCtrl', ['$scope', 'PrintJob', '$http', function ($scope, PrintJob, $http) {
-        $scope.printJobs = PrintJob.query({sort: '-updatedAt', populate: 'order', select:'order.no'});
+        $scope.printJobs = PrintJob.query({sort: '-updatedAt'});
         $scope.cancel = function(printJob){
             $http.post('/printJob/cancel', {printJob: printJob._id}).success(function(){
-                $scope.printJobs = PrintJob.query({sort: '-updatedAt', populate: 'order', select:'order.no'});
+                $scope.printJobs = PrintJob.query({sort: '-updatedAt'});
             });
         };
 
