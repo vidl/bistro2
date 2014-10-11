@@ -92,12 +92,12 @@ function cm2pdfUnit(cm) {
 function drawBoxedText(doc, text){
     var y = doc.y;
     var textWidth = doc.widthOfString(text);
-    var contentWidth = doc.page.width;
+    var contentWidth = doc.page.width - doc.page.margins.left - doc.page.margins.right;
     doc.text(text, {align: 'center'});
 
     doc
         .lineWidth(1)
-        .roundedRect((contentWidth - textWidth)/2 - 5, y - 6, textWidth + 10, doc.y - y + 5, 5)
+        .roundedRect(doc.page.margins.left + (contentWidth - textWidth)/2 - 5, y - 6, textWidth + 10, doc.y - y + 5, 5)
         .stroke();
     return doc;
 }
@@ -129,17 +129,19 @@ module.exports = function(settings) {
     var createReceiptPdf = function(order) {
         var doc = new PDFDocument({
             size: [cm2pdfUnit(8),cm2pdfUnit(29)],
-            margin: cm2pdfUnit(0.5)
+            margins: {
+                left: cm2pdfUnit(0.5),
+                right: cm2pdfUnit(0.9),
+                top: cm2pdfUnit(0.5),
+                bottom: cm2pdfUnit(0.5)
+            }
         });
         doc.font('Helvetica').fontSize(12).text('Bistro-Bestellung', {align:'center'}).moveDown();
         doc.font('Helvetica-Bold').fontSize(16);
 
         drawBoxedText(doc, 'Nr. ' + order.no).moveDown(0.5);
-        doc.font('Helvetica').fontSize(10).text('vom ' + moment(order._id.getTimestamp()).format('HH:mm DD.MM.YYYY'), {align: 'center'}).moveDown(2);
 
-        doc.font('Helvetica').fontSize(10);
-        var textColWith = cm2pdfUnit(4.5);
-        var colSpace = cm2pdfUnit(0.1);
+        doc.font('Helvetica').fontSize(8);
         _.each(order.items, function(item){
             if (item.count == 1) {
                 doc.text(item.article.receipt || item.article.name, {width: cm2pdfUnit(5.5)}).moveUp();
@@ -152,17 +154,20 @@ module.exports = function(settings) {
             }
             doc.moveDown(0.5);
         });
-        doc.font('Helvetica-Bold').text('Total').moveUp();
+        doc.font('Helvetica-Bold').fontSize(10).text('Total').moveUp();
         doc.text(order.currency.toUpperCase() + ' ' + currency(order.total[order.currency]), {align: 'right'});
 
         if (order.kitchenNotes){
             doc.moveDown().text('Hinweise an die Küche:').moveDown(0.5);
             doc.font('Helvetica');
             _.each(order.kitchenNotes.split('\n'), function(line){
-                doc.text(line, {indent: doc.page.margins.left});
+                doc.text(line);
             });
         }
 
+        doc.moveDown(2);
+        doc.font('Helvetica').fontSize(8).text(moment(order._id.getTimestamp()).format('HH:mm DD.MM.YYYY'), {align: 'center'}).moveDown(2);
+        
         var pdfFileName = pdfDirectory + '/receipt_' + order.no + '.pdf';
         return writePdf(doc, pdfFileName);
 

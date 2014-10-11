@@ -323,7 +323,13 @@ module.exports = function(dbConnection, disablePrinting) {
             })
             .then(setOrderState('sent'))
             .then(saveDocument)
-            .then(createPrintJob('kitchen'))
+            .then(function(order){
+                if (order.kitchen) {
+                    return createPrintJob('kitchen')(order);
+                } else {
+                    return order;
+                }
+            })
             .then(createPrintJob('receipt'))
             .then(createOrder)
             .then(function(order){
