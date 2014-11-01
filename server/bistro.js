@@ -4,6 +4,7 @@ var uid2 = require('uid2');
 var bodyParser = require('body-parser');
 var methodOverride = require('method-override');
 var _ = require('underscore');
+var moment = require('moment');
 var dbo = require('./dbo');
 var q = require('q');
 var print = require('./print');
@@ -211,20 +212,40 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
                 revenues: {},
                 vouchers: {}
             },
-            articles: {}
+            articles: {},
+            orderDateRange: {
+                from: null,
+                to: null
+            },
+            orderCount: 0
         };
+        var dateMax = function(m1, m2) {
+            return m1 == null || m2.isAfter(m1) ? m2 : m1;
+        };
+        var dateMin = function(m1, m2) {
+            return m1 == null || m2.isBefore(m1) ? m2 : m1;
+        };
+
         return wrapMpromise(dataService.model.order.find({state: 'sent'}).populate('items.article').exec())
             .then(function(orders){
+                balanceAndStatistics.orderDateRange = {
+                    from: null,
+                    to: null
+                };
                 _.each(dataService.availableCurrencies, function(currency){
                     balanceAndStatistics.balance.revenues[currency] = 0;
                     balanceAndStatistics.balance.vouchers[currency] = 0;
                 });
+                balanceAndStatistics.orderCount = orders.length;
                 _.each(orders, function(order){
                     if (order.voucher) {
                         balanceAndStatistics.balance.vouchers[order.currency] += order.total[order.currency];
                     } else {
                         balanceAndStatistics.balance.revenues[order.currency] += order.total[order.currency];
                     }
+                    var timeOfOrder = moment(order._id.getTimestamp());
+                    balanceAndStatistics.orderDateRange.to = dateMax(balanceAndStatistics.orderDateRange.to, timeOfOrder);
+                    balanceAndStatistics.orderDateRange.from = dateMin(balanceAndStatistics.orderDateRange.from, timeOfOrder);
                     _.each(order.items, function(item){
                         var article = balanceAndStatistics.articles[item.article._id];
                         if (!article) {

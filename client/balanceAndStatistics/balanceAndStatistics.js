@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency'])
+angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency', 'bistro.date'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider
@@ -12,7 +12,7 @@ angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency'])
 
 
     }])
-    .controller('balanceAndStatisticsCtrl', ['$scope', '$http', 'availableCurrencies', function($scope, $http, availableCurrencies){
+    .controller('balanceAndStatisticsCtrl', ['$scope', '$http', 'availableCurrencies', '$filter', function($scope, $http, availableCurrencies, $filter){
         $scope.availableCurrencies = availableCurrencies;
         $scope.revenues = [];
         $scope.vouchers = [];
@@ -24,6 +24,9 @@ angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency'])
                 return {currency: currency, amount: data.balance.vouchers[currency]};
             });
             $scope.balanceAndStatistics = data;
+            var from = $filter('bistroDate')(data.orderDateRange.from);
+            var to = $filter('bistroDate')(data.orderDateRange.to);
+            $scope.orderDateRange = from === to ? from : from + ' - ' + to;
         });
         $scope.print = function(){
             $http.post('/balanceAndStatistics/print');

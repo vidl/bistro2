@@ -1,5 +1,6 @@
 <div class="page-header">
     <h1>Kassenabschluss und Statistiken</h1>
+    <p>Basierend auf Bestellungen vom {{orderDateRange}}</p>
 </div>
 <div class="row">
     <div class="col-sm-4">
@@ -23,6 +24,51 @@
         </table>
     </div>
 </div>
+<div class="row">
+    <div class="col-sm-4">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Limitierte Zutaten</th>
+                <th class="text-right">Verfügbar</th>
+                <th class="text-right">Verbraucht</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="limit in balanceAndStatistics.limits">
+                <td>{{limit.name}}</td>
+                <td class="text-right">{{limit.total}}</td>
+                <td class="text-right">{{limit.used}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-4">
+        <table class="table">
+            <thead>
+            <tr>
+                <th>Artikel</th>
+                <th class="text-right">Anzahl</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr ng-repeat="article in balanceAndStatistics.articles">
+                <td>{{article.name}}</td>
+                <td class="text-right">{{article.count}}</td>
+            </tr>
+            </tbody>
+            <tfoot>
+            <tr>
+                <th>Bestellungen</th>
+                <th class="text-right">{{balanceAndStatistics.orderCount}}</th>
+            </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
 <div>
     <a class="btn btn-default" role="button" ng-click="print()">Drucken</a>
 </div>

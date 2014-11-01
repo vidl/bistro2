@@ -127,13 +127,37 @@ module.exports = function(settings){
     };
 
     var createBalanceAndStatisticsPdf = function(balanceAndStatistics) {
+        var dateRange = function(format, delimiter) {
+            var from = balanceAndStatistics.orderDateRange.from.format(format);
+            var to = balanceAndStatistics.orderDateRange.to.format(format);
+            return from === to ? from : from + delimiter + to;
+        };
         var doc = new PDFDocument({size: 'A4'});
-        doc.font('Helvetica').fontSize(24).text('Umsatz vom Bistro des ' +  moment().format('DD.MM.YYYY'));
+        doc.font('Helvetica').fontSize(18).text('Kassenabschluss und Statistiken Bistro')
+            .fontSize(12).text('Basierend auf Bestellungen vom ' + dateRange('DD.MM.YYYY', ' - ')
+        ).moveDown();
 
-        doc.fontSize(12).text('Einnahmen: ' + _.map(balanceAndStatistics.balance.revenues, formatAmount).join(', ')).moveDown();
-        doc.fontSize(12).text('Gutscheine: ' + _.map(balanceAndStatistics.balance.vouchers, formatAmount).join(', ')).moveDown();
+        doc.fontSize(16).text('Umsatz').moveDown(0.3);
+        doc.fontSize(12).text('Einnahmen: ' + _.map(balanceAndStatistics.balance.revenues, formatAmount).join(', ')).moveDown(0.3);
+        doc.fontSize(12).text('Gutscheine: ' + _.map(balanceAndStatistics.balance.vouchers, formatAmount).join(', ')).moveDown(0.3);
 
-        var pdfFileName = pdfDirectory + '/balanceAndStatistics' + moment().format('DD_MM_YYYY') + '.pdf';
+        doc.moveDown();
+        doc.fontSize(16).text('Verbrauchte limitierte Zutaten').moveDown(0.3);
+        doc.fontSize(12);
+        _.each(balanceAndStatistics.limits, function(limit){
+           doc.text(limit.name + ': ' + limit.used + ' von ' + limit.total).moveDown(0.3);
+        });
+
+        doc.moveDown();
+        doc.fontSize(16).text('Verkaufte Artikel').moveDown(0.3);
+        doc.fontSize(12);
+        _.each(balanceAndStatistics.articles, function(article){
+            doc.text(article.count + 'x ' + article.name).moveDown(0.3);
+        });
+        doc.moveDown();
+        doc.text(balanceAndStatistics.orderCount + ' Bestellungen');
+
+        var pdfFileName = pdfDirectory + '/balanceAndStatistics' + dateRange('DD_MM_YYYY', '-') + '.pdf';
         return writePdf(doc, pdfFileName);
     };
 
