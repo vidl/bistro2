@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency', 'bistro.date', 'bistro.orders'])
+angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency', 'bistro.date'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider
@@ -12,7 +12,7 @@ angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency', '
 
 
     }])
-    .controller('balanceAndStatisticsCtrl', ['$scope', '$http', 'availableCurrencies', '$filter', 'Order', function($scope, $http, availableCurrencies, $filter, Order){
+    .controller('balanceAndStatisticsCtrl', ['$scope', '$http', 'availableCurrencies', '$filter', function($scope, $http, availableCurrencies, $filter){
         $scope.availableCurrencies = availableCurrencies;
         var init = function() {
             $scope.revenues = [];
@@ -34,9 +34,7 @@ angular.module('bistro.balanceAndStatistics', ['ui.router', 'bistro.currency', '
         $scope.print = function(){
             $http.post('/balanceAndStatistics/print');
         };
-        $scope.deleteOrders = function(){
-            Order.remove(function(){
-               init();
-            });
+        $scope.startOver = function(){
+            $http.post('/balanceAndStatistics/startOver').success(init);
         };
     }]);

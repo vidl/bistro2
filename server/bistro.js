@@ -440,6 +440,16 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
             .done(addToBody(res));
 
     });
+    app.post('/balanceAndStatistics/startOver', function(req, res){
+        wrapMpromise(dataService.model.printJob.remove({}).exec())
+            .then(function(){
+                return wrapMpromise(dataService.model.order.remove({}).exec());
+            }).then(function(){
+                return pdfService.removeAllPdfs();
+            })
+            .catch(handleError(res))
+            .done(addToBody(res));
+    });
     return app;
 };
 

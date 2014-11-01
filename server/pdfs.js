@@ -161,6 +161,18 @@ module.exports = function(settings){
         return writePdf(doc, pdfFileName);
     };
 
+    var removeAllPdfs = function() {
+        return Q.nfapply(fs.readdir, [pdfDirectory])
+            .then(function(files){
+                var pdfFiles = _.filter(files, function(file){
+                   return file.indexOf('.pdf',file.length - '.pdf'.length) !== -1;
+                });
+                return Q.all(_.map(pdfFiles, function(file){
+                    return Q.nfapply(fs.unlink, [pdfDirectory + '/' + file]);
+                }));
+            });
+    };
+
     if (!fs.existsSync(pdfDirectory)) {
         fs.mkdirSync(pdfDirectory);
     }
@@ -168,6 +180,7 @@ module.exports = function(settings){
     return {
         kitchen: createKitchenPdf,
         receipt: createReceiptPdf,
-        balanceAndStatistics: createBalanceAndStatisticsPdf
+        balanceAndStatistics: createBalanceAndStatisticsPdf,
+        removeAllPdfs: removeAllPdfs
     };
 };
