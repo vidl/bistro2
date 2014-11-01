@@ -228,10 +228,6 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
 
         return wrapMpromise(dataService.model.order.find({state: 'sent'}).populate('items.article').exec())
             .then(function(orders){
-                balanceAndStatistics.orderDateRange = {
-                    from: null,
-                    to: null
-                };
                 _.each(dataService.availableCurrencies, function(currency){
                     balanceAndStatistics.balance.revenues[currency] = 0;
                     balanceAndStatistics.balance.vouchers[currency] = 0;
