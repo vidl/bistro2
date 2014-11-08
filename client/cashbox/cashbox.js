@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags'])
+angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags', 'bistro.focus'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider.state('cashbox', {
@@ -12,7 +12,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags']
     }])
     .value('voucherCurrency', 'chf')
 
-    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', function ($scope, Article, $http, availableCurrencies, tags) {
+    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', 'focus', function ($scope, Article, $http, availableCurrencies, tags, focus) {
 
         Article.query({populate: 'limits.limit', sort:'name'}, function(articles){
             $scope.articles = articles;
@@ -58,6 +58,8 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags']
                 $scope.order = data.order;
                 $scope.availability = data.limits;
             });
+            $scope.lastOrder = undefined;
+            $scope.given = '';
         };
 
         var withKitchenNotes = function(options){
@@ -68,7 +70,14 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags']
         };
 
         $scope.commit = function(currency) {
-            $http.post('/order/send', withKitchenNotes({currency: currency})).success(newOrderReceived);
+            $http.post('/order/send', withKitchenNotes({currency: currency})).success(function(data){
+                $scope.lastOrder = {
+                    amount: $scope.order.total[currency],
+                    currency: currency
+                };
+                focus('given');
+                newOrderReceived(data);
+            });
         };
 
         $scope.voucher = function() {

@@ -41,7 +41,21 @@
                 </p>
             </div>
         </div>
-
+        <div class="panel panel-default" ng-show="lastOrder">
+            <div class="panel-title">Rückgeld</div>
+            <div class="panel-body">
+                <p> {{lastOrder.amount | bistroCurrency:lastOrder.currency}} letzte Bestellung</p>
+                <form class="form-inline">
+                    <div class="form-group">
+                        <div class="input-group">
+                            <input class="form-control text-right" type="text" ng-model="given" focus-on="given" placeholder="Gegeben">
+                            <span class="input-group-addon">{{lastOrder.currency.toUpperCase()}}</span>
+                        </div>
+                    </div>
+                </form>
+                <h3>{{((given | bistroCurrency) - lastOrder.amount) | bistroCurrency:lastOrder.currency}}</h3>
+            </div>
+        </div>
     </div>
     <div class="col-sm-9">
         <div class="clearfix">
