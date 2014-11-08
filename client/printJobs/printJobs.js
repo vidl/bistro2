@@ -29,14 +29,14 @@ angular.module('bistro.printJobs', ['ui.router','ngResource', 'bistro.date'])
 
     .service('printJobs', ['PrintJob', '$interval', function(PrintJob, $interval){
         var printJobs = [];
-        /*$interval(function(){
+        $interval(function(){
             PrintJob.query({sort: '-updatedAt'}, function(data){
                 while(printJobs.length > 0) {
                     printJobs.pop();
                 }
                 printJobs.push.apply(printJobs, data);
             });
-        }, 1000);*/
+        }, 1000);
         return printJobs;
     }])
 
