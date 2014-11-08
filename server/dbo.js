@@ -41,6 +41,7 @@ module.exports = function(db){
             receipt: String,
             price: availableCurrenciesDefinition,
             limits: [articleLimit],
+            tags: [{type: String}],
             kitchen: Boolean,
             active: Boolean,
             group: String

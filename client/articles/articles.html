@@ -2,7 +2,7 @@
     <h1>Artikel</h1>
 </div>
 <div class="btn-group">
-    <button type="button" class="btn" ng-class="{'btn-default': group != selectedGroup, 'btn-primary': group == selectedGroup }" ng-repeat="(group,articles) in articlesByGroup" ng-click="filter(group,articles)">{{group}}</button>
+    <button type="button" class="btn" ng-class="{'btn-default': !isSelected(tag), 'btn-primary': isSelected(tag) }" ng-repeat="tag in tags" ng-click="select(tag)" ng-dblclick="selectSingle(tag)">{{tag}}</button>
 </div>
 <table class="table table-striped table-hover">
     <thead>
@@ -12,15 +12,17 @@
         <th>Aktiv</th>
         <th>Küche</th>
         <th>Limitierte Zutaten</th>
+        <th>Tags</th>
     </tr>
     </thead>
     <tbody>
-     <tr ng-repeat="article in articles" ng-click="showDetail(article)" class="cursor-hand">
+     <tr ng-repeat="article in articles | filterByTags" ng-click="showDetail(article)" class="cursor-hand">
          <td>{{article.name}}</td>
          <td ng-repeat="currency in availableCurrencies" class="hidden-xs">{{article.price[currency] | bistroCurrency:currency}}</td>
          <td><span ng-show="article.active" class="glyphicon glyphicon-ok"></span></td>
          <td><span ng-show="article.kitchen" class="glyphicon glyphicon-ok"></span></td>
          <td><span ng-repeat="limit in article.limits">{{limit.dec}}x {{limit.limit.name}}{{$last ? '' : ', '}}</span></td>
+         <td>{{article.tags.join(', ')}}</td>
      </tr>
     </tbody>
 </table>

@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
+angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider.state('cashbox', {
@@ -12,19 +12,18 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles'])
     }])
     .value('voucherCurrency', 'chf')
 
-    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', function ($scope, Article, $http, availableCurrencies) {
+    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', function ($scope, Article, $http, availableCurrencies, tags) {
 
-        $scope.availableCurrencies = availableCurrencies;
-        Article.query({populate: 'limits.limit'}, function(articles){
-            $scope.articlesByGroup = _.groupBy(articles, function(article){
-                return article.group || 'keine Gruppe';
-            });
+        Article.query({populate: 'limits.limit', sort:'name'}, function(articles){
+            tags.setFromArticles(articles);
+            $scope.tags = tags.getAvailableTags();
+            $scope.articles = articles;
         });
 
-        $scope.select = function(group, articles){
-            $scope.selectedGroup = group;
-            $scope.articles = articles;
-        };
+        $scope.availableCurrencies = availableCurrencies;
+        $scope.isSelected = tags.isSelected;
+        $scope.select = tags.select;
+        $scope.selectSingle = tags.selectSingle;
 
         $scope.showKitchenNotes = false;
         $scope.kitchenNotes = '';

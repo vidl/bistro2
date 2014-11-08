@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','bistro.limits'])
+angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','bistro.limits', 'bistro.tags'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider
@@ -21,41 +21,43 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
         return $resource('/api/v1/articles/:articleId',{articleId: '@_id'});
     }])
 
-    .controller('ArticlesCtrl', ['$scope', '$stateParams', 'Article', 'availableCurrencies', '$state', function ($scope, $stateParams, Article, availableCurrencies, $state) {
+    .controller('ArticlesCtrl', ['$scope', '$stateParams', 'Article', 'availableCurrencies', '$state', 'tags', function ($scope, $stateParams, Article, availableCurrencies, $state, tags) {
 
-        Article.query({populate: 'limits.limit'}, function(articles){
-            $scope.articlesByGroup = _.groupBy(articles, function(article){
-                return  article.group || 'keine Gruppe';
-            });
-            var group = $stateParams.group || _.keys($scope.articlesByGroup)[0];
-            var articles = $scope.articlesByGroup[group];
-            $scope.filter(group, articles);
+        Article.query({populate: 'limits.limit', sort: 'name'}, function(articles){
+            tags.setFromArticles(articles);
+            $scope.tags = tags.getAvailableTags();
+            $scope.articles = articles;
         });
 
         $scope.availableCurrencies = availableCurrencies;
+        $scope.isSelected = tags.isSelected;
+        $scope.select = tags.select;
+        $scope.selectSingle = tags.selectSingle;
+
 
         $scope.showDetail = function(article){
             $state.go('articleDetail', {articleId: article._id});
         };
 
-        $scope.filter = function(group, articles){
-            $scope.articles = articles;
-            $scope.selectedGroup = group;
-        };
 
     }])
 
-    .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article','Limit', 'availableCurrencies', '$state', function($scope, $stateParams, Article, Limit, availableCurrencies, $state){
+    .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article','Limit', 'availableCurrencies', '$state', 'tags', function($scope, $stateParams, Article, Limit, availableCurrencies, $state, tags){
         $scope.availableCurrencies = availableCurrencies;
+        $scope.tags = angular.copy(tags.getAvailableTags());
         if ($stateParams.articleId){
             $scope.article = Article.get(angular.extend($stateParams, {populate: 'limits.limit'}), function(){
                 if (!$scope.article.limits) {
                     $scope.article.limits = [];
                 }
+                if (!$scope.article.tags) {
+                    $scope.article.tags = [];
+                }
             });
         } else {
             $scope.article = new Article();
             $scope.article.limits = [];
+            $scope.article.tags = [];
             $scope.article.price = {};
             angular.forEach(availableCurrencies, function(currency){
                 $scope.article.price[currency] = 0;
@@ -74,12 +76,38 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
         };
 
         $scope.save = function() {
-            $scope.article.$save();
-            $state.go('articles', {group: $scope.article.group});
+            $scope.article.$save(function(){
+                $state.go('articles');
+            });
         };
 
         $scope.remove = function(){
-            $scope.article.$remove();
-            $state.go('articles');
+            $scope.article.$remove(function(){
+                $state.go('articles');
+            });
         };
+
+        $scope.showTagSuggestions = false;
+
+        $scope.removeTag = function(index) {
+            var removedTag = $scope.article.tags.splice(index, 1);
+            $scope.tags.push(removedTag[0]);
+        };
+
+        $scope.addTag = function(tag) {
+            $scope.tags = _.without($scope.tags, tag);
+            $scope.article.tags.push(tag);
+            $scope.tagInput = '';
+            $scope.showTagSuggestions = false;
+        };
+
+        $scope.addTypedTag = function($event) {
+            if ($event.keyCode == 13) {
+                $scope.article.tags.push($scope.tagInput);
+                $scope.tags = _.without($scope.tags, $scope.tagInput);
+                $scope.tagInput = '';
+                $event.preventDefault();
+            }
+            $scope.showTagSuggestions = true;
+        }
     }]);
