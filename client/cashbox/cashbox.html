@@ -44,12 +44,16 @@
 
     </div>
     <div class="col-sm-9">
-        <div class="panel panel-default">
-            <div class="panel-heading">
+        <div class="clearfix">
+            <div class="pull-left" style="margin-right: 1em; margin-bottom: 1em;" ng-repeat="tagGroup in tags">
                 <div class="btn-group">
-                    <button type="button" class="btn" ng-class="{'btn-default': !isSelected(tag), 'btn-primary': isSelected(tag) }" ng-repeat="tag in tags" ng-click="select(tag)" ng-dblclick="selectSingle(tag)">{{tag}}</button>
+                    <button type="button" class="btn" ng-class="{'btn-default': !isSelected(tag), 'btn-primary': isSelected(tag) }" ng-repeat="tag in tagGroup" ng-click="select(tag)" ng-dblclick="selectSingle(tag)">{{tag}}</button>
                 </div>
             </div>
+        </div>
+        <div class="panel panel-default">
+            <!--div class="panel-heading">
+            </div-->
             <div class="panel-body">
                 <div class="article pull-left" ng-repeat="article in articles | filterByTags | filter:{active: true}">
                     <a class="btn btn-default btn-block" ng-disabled="article.limits && available(article) < 1" ng-click="inc(article,1)">

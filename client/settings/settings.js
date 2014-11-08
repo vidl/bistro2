@@ -10,11 +10,18 @@ angular.module('bistro.settings', ['ui.router','ngResource'])
                 controller: 'SettingsCtrl'
             })
             .state('settingPrinter', {
-                url: '/settings/:settingId',
+                url: '/settings/printer/:settingId',
                 templateUrl: 'settings/formPrinter.html',
                 controller: 'SettingCtrl'
 
-            });
+            })
+            .state('settingTagGroups', {
+                url: '/settings/tagGroups/:settingId',
+                templateUrl: 'settings/formTagGroups.html',
+                controller: 'SettingCtrl'
+
+            })
+        ;
 
 
     }])

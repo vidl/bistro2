@@ -15,15 +15,16 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags']
     .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', function ($scope, Article, $http, availableCurrencies, tags) {
 
         Article.query({populate: 'limits.limit', sort:'name'}, function(articles){
-            tags.setFromArticles(articles);
-            $scope.tags = tags.getAvailableTags();
             $scope.articles = articles;
+            var tagsForArticles = tags(articles);
+            $scope.tags = tagsForArticles.groupedTags;
+            $scope.isSelected = tagsForArticles.isSelected;
+            $scope.select = tagsForArticles.select;
+            $scope.selectSingle = tagsForArticles.selectSingle;
+
         });
 
         $scope.availableCurrencies = availableCurrencies;
-        $scope.isSelected = tags.isSelected;
-        $scope.select = tags.select;
-        $scope.selectSingle = tags.selectSingle;
 
         $scope.showKitchenNotes = false;
         $scope.kitchenNotes = '';

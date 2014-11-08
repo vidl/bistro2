@@ -24,15 +24,15 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
     .controller('ArticlesCtrl', ['$scope', '$stateParams', 'Article', 'availableCurrencies', '$state', 'tags', function ($scope, $stateParams, Article, availableCurrencies, $state, tags) {
 
         Article.query({populate: 'limits.limit', sort: 'name'}, function(articles){
-            tags.setFromArticles(articles);
-            $scope.tags = tags.getAvailableTags();
             $scope.articles = articles;
+            var tagsForArticles = tags(articles);
+            $scope.tags = tagsForArticles.tags;
+            $scope.isSelected = tagsForArticles.isSelected;
+            $scope.select = tagsForArticles.select;
+            $scope.selectSingle = tagsForArticles.selectSingle;
         });
 
         $scope.availableCurrencies = availableCurrencies;
-        $scope.isSelected = tags.isSelected;
-        $scope.select = tags.select;
-        $scope.selectSingle = tags.selectSingle;
 
 
         $scope.showDetail = function(article){
@@ -43,8 +43,13 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
     }])
 
     .controller('ArticleCtrl', ['$scope', '$stateParams', 'Article','Limit', 'availableCurrencies', '$state', 'tags', function($scope, $stateParams, Article, Limit, availableCurrencies, $state, tags){
+        $scope.tags = [];
+        Article.query({}, function(articles){
+            var tagsForArticles = tags(articles);
+            $scope.tags = angular.copy(tagsForArticles.tags);
+        });
+
         $scope.availableCurrencies = availableCurrencies;
-        $scope.tags = angular.copy(tags.getAvailableTags());
         if ($stateParams.articleId){
             $scope.article = Article.get(angular.extend($stateParams, {populate: 'limits.limit'}), function(){
                 if (!$scope.article.limits) {

@@ -450,6 +450,16 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
             .catch(handleError(res))
             .done(addToBody(res));
     });
+
+    app.get('/tagGroups', function(req, res){
+        wrapMpromise(
+        dataService.model.setting
+            .findOneOrCreate({name: 'tagGroups'}, {name: 'tagGroups', desc: 'Tag Gruppen', value: '.*', type: 'TagGroups'})
+        )
+        .catch(handleError(res))
+        .done(addToBody(res));
+    });
+
     return app;
 };
 
