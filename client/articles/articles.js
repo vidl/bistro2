@@ -26,7 +26,7 @@ angular.module('bistro.articles', ['ui.router','ngResource', 'bistro.currency','
         Article.query({populate: 'limits.limit', sort: 'name'}, function(articles){
             $scope.articles = articles;
             var tagsForArticles = tags(articles);
-            $scope.tags = tagsForArticles.tags;
+            $scope.tags = tagsForArticles.groupedTags;
             $scope.isSelected = tagsForArticles.isSelected;
             $scope.select = tagsForArticles.select;
             $scope.selectSingle = tagsForArticles.selectSingle;

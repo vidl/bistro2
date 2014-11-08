@@ -52,8 +52,6 @@
             </div>
         </div>
         <div class="panel panel-default">
-            <!--div class="panel-heading">
-            </div-->
             <div class="panel-body">
                 <div class="article pull-left" ng-repeat="article in articles | filterByTags | filter:{active: true}">
                     <a class="btn btn-default btn-block" ng-disabled="article.limits && available(article) < 1" ng-click="inc(article,1)">
