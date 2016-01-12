@@ -405,7 +405,10 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
             .then(populate('items.article'))
             .then(function(order){
                 if (order.kitchen) {
-                    return createPrintJob('kitchen')(order);
+                    return printService.getKitchenPrinterType()
+                        .then(function(type){
+                            return createPrintJob('kitchen' + type, 'kitchen')(order);
+                        });
                 } else {
                     return order;
                 }

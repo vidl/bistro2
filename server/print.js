@@ -139,7 +139,10 @@ module.exports = function(settings) {
     };
 
     var fetchKitchenPrinterType = function() {
-        return findOrCreateKitchenPrinterTypeSetting(kitchenPrinterTypeSettingName, 'Küchendrucker-Typ', kitchenPrinterTypes[0].type);
+        return findOrCreateKitchenPrinterTypeSetting(kitchenPrinterTypeSettingName, 'Küchendrucker-Typ', kitchenPrinterTypes[0].type)
+            .then(function(setting){
+                return setting.value;
+            });
     };
 
     var checkForNewPrintRequest = function(){

@@ -96,6 +96,50 @@ module.exports = function(settings){
 
     };
 
+    var createKitchenReceiptPdf = function (order) {
+        var doc = new PDFDocument({
+            size: [cm2pdfUnit(8),cm2pdfUnit(29)],
+            margins: {
+                left: cm2pdfUnit(0.5),
+                right: cm2pdfUnit(0.9),
+                top: cm2pdfUnit(0.5),
+                bottom: cm2pdfUnit(0.5)
+            }
+        });
+        doc.font('Helvetica').fontSize(12).text('Bistro-Bestellung', {align:'center'}).moveDown();
+        doc.font('Helvetica-Bold').fontSize(16);
+
+        drawBoxedText(doc, 'Nr. ' + order.no).moveDown(0.5);
+
+        doc.font('Helvetica');
+        if (order.kitchenNotes){
+            doc.fontSize(12);
+            var y = doc.y;
+            _.each(order.kitchenNotes.split('\n'), function(line){
+                doc.text(line, {width: 200});
+            });
+            doc
+                .lineWidth(1)
+                .roundedRect(doc.x - 5, y - 5, 205, doc.y - y + 5, 5)
+                .stroke()
+            doc.moveDown(1);
+        }
+        doc.fontSize(14);
+        _.each(order.items, function (item) {
+            if (item.article.kitchen) {
+                doc.text(item.count + 'x')
+                    .moveUp()
+                    .text(item.article.name, {indent: 20, lineGap: 10});
+            }
+        });
+
+        doc.moveDown(1);
+        doc.font('Helvetica').fontSize(8).text(moment(order._id.getTimestamp()).format('HH:mm DD.MM.YYYY'), {align: 'center'}).moveDown(2);
+
+        var pdfFileName = pdfDirectory + '/order_' + order.no + '.pdf';
+        return writePdf(doc, pdfFileName);
+
+    };
     var createKitchenPdf = function (order) {
         var doc = new PDFDocument({size: 'A4'});
         doc.font('Helvetica').fontSize(28).text('Bestellung Nummer ' + order.no);
@@ -181,7 +225,8 @@ module.exports = function(settings){
     }
 
     return {
-        kitchen: createKitchenPdf,
+        kitchennormal: createKitchenPdf,
+        kitchenreceipt: createKitchenReceiptPdf,
         receipt: createReceiptPdf,
         balanceAndStatistics: createBalanceAndStatisticsPdf,
         removeAllPdfs: removeAllPdfs
