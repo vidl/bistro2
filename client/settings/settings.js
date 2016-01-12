@@ -15,6 +15,12 @@ angular.module('bistro.settings', ['ui.router','ngResource'])
                 controller: 'SettingCtrl'
 
             })
+            .state('settingKitchenPrinterType', {
+                url: '/settings/kitchenPrinterType/:settingId',
+                templateUrl: 'settings/formKitchenPrinterType.html',
+                controller: 'SettingCtrl'
+
+            })
             .state('settingTagGroups', {
                 url: '/settings/tagGroups/:settingId',
                 templateUrl: 'settings/formTagGroups.html',
@@ -28,6 +34,14 @@ angular.module('bistro.settings', ['ui.router','ngResource'])
 
     .service('Setting', ['$resource', function($resource){
         return $resource('/api/v1/settings/:settingId',{settingId: '@_id'});
+    }])
+
+    .service('kitchenPrinterTypes', ['$http', function($http){
+        var kitchenPrinterTypes = [];
+        $http.get('/kitchenPrinterTypes').success(function(data){
+            kitchenPrinterTypes.push.apply(kitchenPrinterTypes, data); // add all to the existing array (do not modify the reference)
+        });
+        return kitchenPrinterTypes;
     }])
 
     .service('availablePrinters', ['$http', function($http){
@@ -46,8 +60,9 @@ angular.module('bistro.settings', ['ui.router','ngResource'])
 
     }])
 
-    .controller('SettingCtrl', ['$scope', '$stateParams', 'Setting', 'availablePrinters', '$state', function($scope, $stateParams, Setting, availablePrinters, $state){
+    .controller('SettingCtrl', ['$scope', '$stateParams', 'Setting', 'availablePrinters', 'kitchenPrinterTypes', '$state', function($scope, $stateParams, Setting, availablePrinters, kitchenPrinterTypes, $state){
         $scope.availablePrinters = availablePrinters;
+        $scope.kitchenPrinterTypes = kitchenPrinterTypes;
         $scope.setting = Setting.get($stateParams);
 
 

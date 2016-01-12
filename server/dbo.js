@@ -33,7 +33,7 @@ module.exports = function(db){
             name: String,
             desc: String,
             value: String,
-            type: { type: String, enum: ['Printer', 'TagGroups']}
+            type: { type: String, enum: ['Printer', 'TagGroups', 'KitchenPrinterType']}
         }),
         articleLimit: articleLimit,
         article: new Schema({

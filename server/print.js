@@ -76,6 +76,11 @@ module.exports = function(settings) {
     var dataService = settings.dataService;
     var receiptPrinterSettingName = 'receiptPrinter';
     var kitchenPrinterSettingName =  'kitchenPrinter';
+    var kitchenPrinterTypeSettingName = 'kitchenPrinterType';
+    var kitchenPrinterTypes = [
+        { name: 'Bondrucker', type: 'receipt'},
+        { name: 'normaler Drucker', type: 'normal'}
+    ];
     var interval = settings.interval || 1000;
 
 
@@ -108,6 +113,13 @@ module.exports = function(settings) {
         );
     };
 
+    var findOrCreateKitchenPrinterTypeSetting = function(settingName, desc, value){
+        return wrapMpromise(
+            dataService.model.setting
+                .findOneOrCreate({name: settingName}, {name: settingName, desc: desc, value: value, type: 'KitchenPrinterType'})
+        );
+    };
+
     var fetchPrinterNames = function() {
         printerNames = {};
         availablePrinters = [];
@@ -124,6 +136,10 @@ module.exports = function(settings) {
                 printerNames.receipt = setting.value;
                 return printerNames;
             });
+    };
+
+    var fetchKitchenPrinterType = function() {
+        return findOrCreateKitchenPrinterTypeSetting(kitchenPrinterTypeSettingName, 'Küchendrucker-Typ', kitchenPrinterTypes[0].type);
     };
 
     var checkForNewPrintRequest = function(){
@@ -172,10 +188,13 @@ module.exports = function(settings) {
             });
     };
 
+    fetchKitchenPrinterType();
 
     return {
         getPrinters: getPrinters,
-        cancelJob: cancelJob
+        cancelJob: cancelJob,
+        kitchenPrinterTypes: kitchenPrinterTypes,
+        getKitchenPrinterType: fetchKitchenPrinterType
     };
 
 };

@@ -286,6 +286,9 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
            .catch(handleError(res))
            .done(addToBody(res));
     });
+    app.get('/kitchenPrinterTypes', function(req, res){
+       res.json(printService.kitchenPrinterTypes);
+    });
 
     app.get('/order', function(req, res){
         getOrCreateOrder(getOrderIdFromSession(req))
