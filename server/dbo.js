@@ -114,17 +114,8 @@ module.exports = function(db){
                 next();
             });
         };
-        if (doc.isNew){
-            model.order.findOne().sort('-no').exec(function(err, order){
-                if (err) throw err;
-                doc.no = order ? (order.no  + 1) : 1;
-                removeZeroOrderItems();
-                updateTotalAndKitchen();
-            });
-        } else {
-            removeZeroOrderItems();
-            updateTotalAndKitchen();
-        }
+        removeZeroOrderItems();
+        updateTotalAndKitchen();
     });
 
     schema.article.pre('save', function(next){

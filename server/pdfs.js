@@ -59,7 +59,9 @@ module.exports = function(settings){
         doc.font('Helvetica').fontSize(12).text('Bistro-Bestellung', {align:'center'}).moveDown();
         doc.font('Helvetica-Bold').fontSize(16);
 
-        drawBoxedText(doc, 'Nr. ' + order.no).moveDown(0.5);
+        if (order.no) {
+            drawBoxedText(doc, 'Nr. ' + order.no).moveDown(0.5);
+        }
 
         doc.font('Helvetica').fontSize(8);
         _.each(order.items, function(item){
@@ -88,7 +90,8 @@ module.exports = function(settings){
         doc.moveDown(2);
         doc.font('Helvetica').fontSize(8).text(moment(order._id.getTimestamp()).format('HH:mm DD.MM.YYYY'), {align: 'center'}).moveDown(2);
 
-        var pdfFileName = pdfDirectory + '/receipt_' + order.no + '.pdf';
+        var ts = moment(order._id.getTimestamp()).format('YYYYDDMM-HHmmss');
+        var pdfFileName = pdfDirectory + '/receipt_' + (order.no || ts) + '.pdf';
         return writePdf(doc, pdfFileName);
 
     };

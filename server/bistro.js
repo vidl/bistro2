@@ -131,6 +131,15 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
             });
     };
 
+    var assignOrderNumber = function(order) {
+        return wrapMpromise(dataService.model.order.findOne().sort('-no').exec())
+            .then(function(orderWithBiggestNo) {
+                var lastNo = orderWithBiggestNo ? (orderWithBiggestNo.no || 0) : 0;
+                order.no = lastNo + 1;
+                return order;
+            });
+    };
+
     var getAggregatedLimits = function(){
         function setupTotal(limits){
             var total = {};
@@ -382,7 +391,11 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
                 order.currency = req.param('currency') || dataService.availableCurrencies[0];
                 order.kitchenNotes = req.param('kitchenNotes') || order.kitchenNotes;
                 order.voucher = req.param('voucher') || false;
-                return order;
+                if (order.kitchen) {
+                    return assignOrderNumber(order);
+                } else {
+                    return order;
+                }
             })
             .then(setOrderState('sent'))
             .then(saveDocument)
