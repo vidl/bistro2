@@ -12,7 +12,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags',
     }])
     .value('voucherCurrency', 'chf')
 
-    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', 'focus', 'availabilityUpdateEventName', function ($scope, Article, $http, availableCurrencies, tags, focus, availabilityUpdateEventName) {
+    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', 'focus', 'availabilityUpdateEventName', 'availabilityUpdate', function ($scope, Article, $http, availableCurrencies, tags, focus, availabilityUpdateEventName, availabilityUpdate) {
 
         Article.query({populate: 'limits.limit', sort:'name'}, function(articles){
             $scope.articles = articles;
@@ -34,6 +34,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags',
         $scope.$on(availabilityUpdateEventName, function(event, data){
             $scope.availability = data;
         });
+        availabilityUpdate();
 
         $scope.available = function(article){
             var available = _.map(article.limits, function(limit){

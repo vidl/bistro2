@@ -16,13 +16,17 @@ angular.module('bistro.limits', ['ui.router','ngResource'])
             });
 
     }])
-    .factory('availabilityUpdateEventName', ['$interval', '$http', '$rootScope', function($interval, $http, $rootScope){
+    .service('availabilityUpdate', ['$http', '$rootScope', function($http, $rootScope){
         var eventName = 'availabilityUpdate';
-        $interval(function(){
+        return function(){
             $http.get('/availability').success(function(data){
                 $rootScope.$broadcast(eventName, data);
             });
-        }, 1000);
+        }
+    }])
+    .factory('availabilityUpdateEventName', ['$interval', 'availabilityUpdate', function($interval, availabilityUpdate){
+        var eventName = 'availabilityUpdate';
+        $interval(availabilityUpdate, 1000);
         return eventName;
     }])
 
@@ -30,10 +34,11 @@ angular.module('bistro.limits', ['ui.router','ngResource'])
         return $resource('/api/v1/limits/:limitId',{limitId: '@_id'});
     }])
 
-    .controller('LimitsCtrl', ['$scope', 'Limit', 'availabilityUpdateEventName', '$state', '$http', function ($scope, Limit, availabilityUpdateEventName, $state, $http) {
+    .controller('LimitsCtrl', ['$scope', 'availabilityUpdateEventName', 'availabilityUpdate', '$state', '$http', function ($scope, availabilityUpdateEventName, availabilityUpdate, $state, $http) {
         $scope.$on(availabilityUpdateEventName, function(event, data){
             $scope.availability = data;
         });
+        availabilityUpdate();
 
         $scope.increase = function(limitId, incAmount) {
             $http.post('/availability/inc', {limit: limitId, incAmount: incAmount}).success(function(data){
@@ -41,7 +46,6 @@ angular.module('bistro.limits', ['ui.router','ngResource'])
             });
         };
 
-        $scope.limits = Limit.query();
         $scope.showDetail = function(limit){
             $state.go('limitDetail', {limitId: limit._id});
         };
