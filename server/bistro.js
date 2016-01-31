@@ -440,6 +440,29 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
            .done(addToBody(res));
     });
 
+    app.post('/availability/inc', function(req, res){
+        var limitId = req.param('limit');
+        var incAmount = parseInt(req.param('incAmount'));
+
+        getAggregatedLimits()
+            .then(function(limits){
+                var limitToModify = limits[limitId];
+                if (limitToModify) {
+                    var available = limitToModify.total - limitToModify.used;
+                    if (available < -incAmount) {
+                        throw new Error("Limit kann nicht mehr reduziert werden");
+                    } else {
+                        return wrapMpromise(dataService.model.limit.update({_id: limitId}, {$inc: { 'available': incAmount}}).exec());
+                    }
+                } else {
+                    throw new Error('Limit nicht gefunden');
+                }
+            })
+            .then(getAggregatedLimits)
+            .catch(handleError(res))
+            .done(addToBody(res));
+    });
+
     app.post('/printJob/cancel', function(req, res){
         printService.cancelJob(req.param('printJob'))
             .catch(handleError(res))

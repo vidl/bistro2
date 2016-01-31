@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags', 'bistro.focus'])
+angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags', 'bistro.focus', 'bistro.limits'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider.state('cashbox', {
@@ -12,7 +12,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags',
     }])
     .value('voucherCurrency', 'chf')
 
-    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', 'focus', function ($scope, Article, $http, availableCurrencies, tags, focus) {
+    .controller('CashboxCtrl', ['$scope', 'Article', '$http', 'availableCurrencies', 'tags', 'focus', 'availabilityUpdateEventName', function ($scope, Article, $http, availableCurrencies, tags, focus, availabilityUpdateEventName) {
 
         Article.query({populate: 'limits.limit', sort:'name'}, function(articles){
             $scope.articles = articles;
@@ -31,7 +31,7 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags',
         $scope.availability = {};
         $scope.order = {};
 
-        $http.get('/availability').success(function(data){
+        $scope.$on(availabilityUpdateEventName, function(event, data){
             $scope.availability = data;
         });
 
