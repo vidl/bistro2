@@ -39,8 +39,8 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags',
         $scope.available = function(article){
             var available = _.map(article.limits, function(limit){
                 var availableByLimit = $scope.availability[limit.limit._id] || { editing: 0, preordered: 0, sent: 0, processed: 0, total: 0};
-                var used = availableByLimit.total - availableByLimit.editing - availableByLimit.preordered - availableByLimit.sent - availableByLimit.preordered;
-                return Math.floor((used) / limit.dec);
+                var used = availableByLimit.total - availableByLimit.editing - availableByLimit.preordered - availableByLimit.sent - availableByLimit.processed;
+                return Math.floor(used / limit.dec);
             });
             return available.length ? _.min(available) : undefined;
         };

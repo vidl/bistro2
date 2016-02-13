@@ -244,18 +244,29 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
             return m1 == null || m2.isBefore(m1) ? m2 : m1;
         };
 
-        return wrapMpromise(dataService.model.order.find({state: 'sent'}).populate('items.article').exec())
+        return wrapMpromise(dataService.model.order.find({state: 'processed'}).populate('items.article').exec())
             .then(function(orders){
                 _.each(dataService.availableCurrencies, function(currency){
                     balanceAndStatistics.balance.revenues[currency] = 0;
                     balanceAndStatistics.balance.vouchers[currency] = 0;
                 });
-                balanceAndStatistics.orderCount = orders.length;
+                balanceAndStatistics.order = {
+                    count: orders.length,
+                    duration: {
+                        min: 0,
+                        max: 0,
+                        avg: 0
+                    }
+                };
+                var orderDurations = [];
                 _.each(orders, function(order){
                     if (order.voucher) {
                         balanceAndStatistics.balance.vouchers[order.currency] += order.total[order.currency];
                     } else {
                         balanceAndStatistics.balance.revenues[order.currency] += order.total[order.currency];
+                    }
+                    if (order.kitchen) {
+                        orderDurations.push(moment(order.processed).diff(moment(order.sent), 'minutes'));
                     }
                     var timeOfOrder = moment(order._id.getTimestamp());
                     balanceAndStatistics.orderDateRange.to = dateMax(balanceAndStatistics.orderDateRange.to, timeOfOrder);
@@ -272,6 +283,9 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
                         article.count += item.count;
                     });
                 });
+                balanceAndStatistics.order.duration.min = _.min(orderDurations);
+                balanceAndStatistics.order.duration.max = _.max(orderDurations);
+                balanceAndStatistics.order.duration.avg = Math.round(_.reduce(orderDurations, function(memo, num){ return memo + num; }, 0) / orderDurations.length);
                 return getAggregatedLimits();
             })
             .then(function(limits){
@@ -500,7 +514,12 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
     });
     app.post('/balanceAndStatistics/print', function(req, res){
         calculateBalanceAndStatistics()
-            .then(createPrintJob('balanceAndStatistics', 'kitchen'))
+            .then(function(data){
+                return printService.getKitchenPrinterType()
+                    .then(function(type){
+                        return createPrintJob('balanceAndStatistics' + type, 'kitchen')(data);
+                    });
+            })
             .catch(handleError(res))
             .done(addToBody(res));
 

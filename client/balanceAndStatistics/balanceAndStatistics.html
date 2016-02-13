@@ -48,7 +48,7 @@
             <tr ng-repeat="limit in balanceAndStatistics.limits">
                 <td>{{limit.name}}</td>
                 <td class="text-right">{{limit.total}}</td>
-                <td class="text-right">{{limit.used}}</td>
+                <td class="text-right">{{limit.processed}}</td>
             </tr>
             </tbody>
         </table>
@@ -69,12 +69,32 @@
                 <td class="text-right">{{article.count}}</td>
             </tr>
             </tbody>
-            <tfoot>
+        </table>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-4">
+        <table class="table">
+            <thead>
             <tr>
                 <th>Bestellungen</th>
-                <th class="text-right">{{balanceAndStatistics.orderCount}}</th>
+                <th class="text-right">{{balanceAndStatistics.order.count}}</th>
             </tr>
-            </tfoot>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Kürzeste Bearbeitungsdauer</td>
+                <td class="text-right">{{balanceAndStatistics.order.duration.min}} min</td>
+            </tr>
+            <tr>
+                <td>Durchschnittliche Bearbeitungsdauer</td>
+                <td class="text-right">{{balanceAndStatistics.order.duration.avg}} min</td>
+            </tr>
+            <tr>
+                <td>Höchste Bearbeitungsdauer</td>
+                <td class="text-right">{{balanceAndStatistics.order.duration.max}} min</td>
+            </tr>
+            </tbody>
         </table>
     </div>
 </div>

@@ -101,7 +101,7 @@ module.exports = function(settings){
             size: [cm2pdfUnit(8),cm2pdfUnit(29)],
             margins: {
                 left: cm2pdfUnit(0.5),
-                right: cm2pdfUnit(0.9),
+                right: cm2pdfUnit(0.5),
                 top: cm2pdfUnit(0.5),
                 bottom: cm2pdfUnit(0.5)
             }
@@ -192,7 +192,7 @@ module.exports = function(settings){
         doc.fontSize(16).text('Verbrauchte limitierte Zutaten').moveDown(0.3);
         doc.fontSize(12);
         _.each(balanceAndStatistics.limits, function(limit){
-           doc.text(limit.name + ': ' + limit.used + ' von ' + limit.total).moveDown(0.3);
+           doc.text(limit.name + ': ' + limit.processed + ' von ' + limit.total).moveDown(0.3);
         });
 
         doc.moveDown();
@@ -202,9 +202,61 @@ module.exports = function(settings){
             doc.text(article.count + 'x ' + article.name).moveDown(0.3);
         });
         doc.moveDown();
-        doc.text(balanceAndStatistics.orderCount + ' Bestellungen');
+        doc.text(balanceAndStatistics.order.count + ' Bestellungen');
 
         var pdfFileName = pdfDirectory + '/balanceAndStatistics' + dateRange('DD_MM_YYYY', '-') + '.pdf';
+        return writePdf(doc, pdfFileName);
+    };
+
+    var createBalanceAndStatisticsReceiptPdf = function(balanceAndStatistics) {
+        var dateRange = function(format, delimiter) {
+            var from = balanceAndStatistics.orderDateRange.from.format(format);
+            var to = balanceAndStatistics.orderDateRange.to.format(format);
+            return from === to ? from : from + delimiter + to;
+        };
+        var doc = new PDFDocument({
+            size: [cm2pdfUnit(8),cm2pdfUnit(29)],
+            margins: {
+                left: cm2pdfUnit(0.5),
+                right: cm2pdfUnit(0.5),
+                top: cm2pdfUnit(0.5),
+                bottom: cm2pdfUnit(0.5)
+            }
+        });
+
+        doc.font('Helvetica').fontSize(14).text('Kassenabschluss und Statistiken Bistro')
+            .fontSize(12).text('Basierend auf Bestellungen vom ' + dateRange('DD.MM.YYYY', ' - ')
+        ).moveDown();
+
+        doc.fontSize(12).text('Umsatz').moveDown(0.3);
+        doc.fontSize(10).text('Einnahmen: ' + _.map(balanceAndStatistics.balance.revenues, formatAmount).join(', ')).moveDown(0.3);
+        doc.fontSize(10).text('Gutscheine: ' + _.map(balanceAndStatistics.balance.vouchers, formatAmount).join(', ')).moveDown(0.3);
+
+        doc.moveDown();
+        doc.fontSize(12).text('Verbrauchte limitierte Zutaten').moveDown(0.3);
+        doc.fontSize(10);
+        _.each(balanceAndStatistics.limits, function(limit){
+            doc.text(limit.name + ': ' + limit.processed + ' von ' + limit.total).moveDown(0.3);
+        });
+
+        doc.moveDown();
+        doc.fontSize(12).text('Verkaufte Artikel').moveDown(0.3);
+        doc.fontSize(10);
+        _.each(balanceAndStatistics.articles, function(article){
+            doc.text(article.count + 'x ' + article.name).moveDown(0.3);
+        });
+        doc.moveDown();
+        doc.fontSize(12).text(balanceAndStatistics.order.count + ' Bestellungen').moveDown(0.3);
+        doc.moveDown();
+
+        doc.fontSize(12).text('Bearbeitungszeit').moveDown(0.3);
+        doc.fontSize(10);
+
+        doc.text('Kürzeste: ' + balanceAndStatistics.order.duration.min + ' min').moveDown(0.3);
+        doc.text('Durchschnittlich: ' + balanceAndStatistics.order.duration.avg + ' min').moveDown(0.3);
+        doc.text('Längste: ' + balanceAndStatistics.order.duration.max + ' min').moveDown(0.3);
+
+        var pdfFileName = pdfDirectory + '/balanceAndStatisticsReceipt' + dateRange('DD_MM_YYYY', '-') + '.pdf';
         return writePdf(doc, pdfFileName);
     };
 
@@ -228,7 +280,8 @@ module.exports = function(settings){
         kitchennormal: createKitchenPdf,
         kitchenreceipt: createKitchenReceiptPdf,
         receipt: createReceiptPdf,
-        balanceAndStatistics: createBalanceAndStatisticsPdf,
+        balanceAndStatisticsnormal: createBalanceAndStatisticsPdf,
+        balanceAndStatisticsreceipt: createBalanceAndStatisticsReceiptPdf,
         removeAllPdfs: removeAllPdfs
     };
 };

@@ -77,7 +77,7 @@
         </div>
         <div class="panel panel-default">
             <div class="panel-body">
-                <span ng-repeat="(limitId, limit) in availability"><a href ui-sref="limitDetail({limitId: limitId})">{{limit.name}}</a>: <span class="badge">{{limit.total - limit.used}}</span> </span>
+                <span ng-repeat="(limitId, limit) in availability"><a href ui-sref="limitDetail({limitId: limitId})">{{limit.name}}</a>: <span class="badge">{{limit.total - limit.editing - limit.preordered - limit.sent - limit.processed}}</span> </span>
             </div>
         </div>
     </div>
