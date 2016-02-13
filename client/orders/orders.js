@@ -16,7 +16,7 @@ angular.module('bistro.orders', ['ui.router','ngResource', 'bistro.date'])
             });
 
     }])
-    .value('orderState', {editing: 'erfassen', preordered: 'vorgemerkt', sent: 'gesendet'})
+    .value('orderState', {editing: 'erfassen', preordered: 'vorgemerkt', sent: 'gesendet', processed: 'verarbeitet'})
 
     .service('Order', ['$resource', function($resource){
         return $resource('/api/v1/orders/:orderId',{orderId: '@_id'});

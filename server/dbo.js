@@ -22,6 +22,7 @@ module.exports = function(db){
         limit: { type: Schema.Types.ObjectId, ref: 'Limit' }
     });
 
+    var orderStates = ['editing', 'preordered', 'sent', 'processed'];
     var availableCurrencies = ['chf', 'eur'];
     var availableCurrenciesDefinition = {};
     _.each(availableCurrencies, function(currency){
@@ -49,7 +50,7 @@ module.exports = function(db){
         order: new Schema({
             no: Number,
             sessionId: String,
-            state: { type: String, enum: ['editing', 'preordered', 'sent']},
+            state: { type: String, enum: orderStates},
             name: String,
             currency: { type: String, enum: availableCurrencies},
             voucher: Boolean,
@@ -187,6 +188,7 @@ module.exports = function(db){
             restify.serve(app, model.limit);
         },
         model: model,
-        availableCurrencies: availableCurrencies
+        availableCurrencies: availableCurrencies,
+        orderStates: orderStates
     }
 };

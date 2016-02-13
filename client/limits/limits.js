@@ -16,36 +16,13 @@ angular.module('bistro.limits', ['ui.router','ngResource'])
             });
 
     }])
-    .service('availabilityUpdate', ['$http', '$rootScope', function($http, $rootScope){
-        var eventName = 'availabilityUpdate';
-        return function(){
-            $http.get('/availability').success(function(data){
-                $rootScope.$broadcast(eventName, data);
-            });
-        }
-    }])
-    .factory('availabilityUpdateEventName', ['$interval', 'availabilityUpdate', function($interval, availabilityUpdate){
-        var eventName = 'availabilityUpdate';
-        $interval(availabilityUpdate, 1000);
-        return eventName;
-    }])
 
     .service('Limit', ['$resource', function($resource){
         return $resource('/api/v1/limits/:limitId',{limitId: '@_id'});
     }])
 
-    .controller('LimitsCtrl', ['$scope', 'availabilityUpdateEventName', 'availabilityUpdate', '$state', '$http', function ($scope, availabilityUpdateEventName, availabilityUpdate, $state, $http) {
-        $scope.$on(availabilityUpdateEventName, function(event, data){
-            $scope.availability = data;
-        });
-        availabilityUpdate();
-
-        $scope.increase = function(limitId, incAmount) {
-            $http.post('/availability/inc', {limit: limitId, incAmount: incAmount}).success(function(data){
-                $scope.availability = data;
-            });
-        };
-
+    .controller('LimitsCtrl', ['$scope', 'Limit', '$state', function ($scope, Limit, $state) {
+        $scope.limits = Limit.query();
         $scope.showDetail = function(limit){
             $state.go('limitDetail', {limitId: limit._id});
         };

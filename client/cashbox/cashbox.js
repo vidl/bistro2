@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags', 'bistro.focus', 'bistro.limits'])
+angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags', 'bistro.focus', 'bistro.kitchen'])
 
     .config(['$stateProvider', function ($stateProvider) {
         $stateProvider.state('cashbox', {
@@ -38,8 +38,9 @@ angular.module('bistro.cashbox', ['ui.router', 'bistro.articles', 'bistro.tags',
 
         $scope.available = function(article){
             var available = _.map(article.limits, function(limit){
-                var availableByLimit = $scope.availability[limit.limit._id] || { used: 0, total: 0};
-                return Math.floor((availableByLimit.total - availableByLimit.used) / limit.dec);
+                var availableByLimit = $scope.availability[limit.limit._id] || { editing: 0, preordered: 0, sent: 0, processed: 0, total: 0};
+                var used = availableByLimit.total - availableByLimit.editing - availableByLimit.preordered - availableByLimit.sent - availableByLimit.preordered;
+                return Math.floor((used) / limit.dec);
             });
             return available.length ? _.min(available) : undefined;
         };

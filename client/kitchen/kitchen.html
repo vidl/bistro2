@@ -1,0 +1,48 @@
+<div class="row">
+    <table class="table" style="width: auto; float: left">
+        <thead>
+        <tr>
+            <th>Limit</th>
+            <th colspan="3" class="text-center">in Küche</th>
+            <th>Offen</th>
+            <th>Reserviert</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="(limitId, limit) in availability">
+            <td class="h2">{{limit.name}}</td>
+            <td class="text-right">
+                <button ng-click="increase(limitId, 1)" class="btn btn-lg btn-success">
+                    <span class="glyphicon glyphicon-chevron-up" aria-hidden="true"></span>
+                </button>
+            </td>
+            <!-- editing: 0, preordered: 0, sent: 9, processed: 0 -->
+            <td class="text-right h1">{{limit.total - limit.processed}}</td>
+            <td>
+                <button ng-click="increase(limitId, -1)" ng-disabled="limit.total - limit.editing - limit.preordered - limit.sent - limit.processed == 0" class="btn btn-lg btn-danger">
+                    <span class="glyphicon glyphicon-chevron-down" aria-hidden="true"></span>
+                </button>
+            </td>
+            <td class="text-right" style="vertical-align: middle">{{limit.sent}}</td>
+            <td class="text-right" style="vertical-align: middle">{{limit.preordered}}</td>
+        </tr>
+
+    </table>
+    <table class="table" style="width: auto; float: right;">
+        <thead>
+        <tr>
+            <th colspan="3">Offene Bestellungen</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr ng-repeat="order in orders">
+            <td class="h2" style="vertical-align: middle">{{order.no}}</td>
+            <td>
+                <strong ng-show="order.kitchenNotes">{{order.kitchenNotes}}<br/></strong>
+                <span ng-repeat="item in order.items">{{item.count}}x {{item.article.name}}<br/></span>
+            </td>
+            <td style="vertical-align: middle"><button class="btn btn-lg btn-success" ng-click="processed($index)"><span class="glyphicon glyphicon-ok"></span></button></td>
+        </tr>
+        </tbody>
+    </table>
+</div>

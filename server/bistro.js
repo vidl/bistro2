@@ -144,7 +144,11 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
         function setupTotal(limits){
             var total = {};
             _.each(limits,function(limit){
-                total[limit._id.toHexString()] = { used: 0, total: limit.available, name: limit.name};
+                var limitData = { total: limit.available, name: limit.name};
+                _.each(dataService.orderStates, function(orderState){
+                    limitData[orderState] = 0;
+                })
+                total[limit._id.toHexString()] = limitData;
             });
             return total;
         }
@@ -154,7 +158,7 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
                 _.each(order.items, function(item){
                     _.each(item.article.limits || [], function(articleLimit){
                         var limitId = articleLimit.limit.toHexString();
-                        total[limitId].used += articleLimit.dec * item.count;
+                        total[limitId][order.state] += articleLimit.dec * item.count;
                     });
                 });
             });
@@ -422,6 +426,14 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
             .catch(handleError(res))
             .done(addToBody(res));
 
+    });
+
+    app.post('/order/processed', function(req, res){
+        getOrder(req.param('order'))
+            .then(setOrderState('processed'))
+            .then(saveDocument)
+            .catch(handleError(res))
+            .done(addToBody(res));
     });
 
     app.post('/order/print', function(req, res){
