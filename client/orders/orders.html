@@ -9,6 +9,8 @@
         <th>Name</th>
         <th>Anzahl Positionen</th>
         <th>Küche</th>
+        <th>Gesendet</th>
+        <th>Abgeschlossen</th>
         <th>Geändert</th>
     </tr>
     </thead>
@@ -19,6 +21,8 @@
          <td>{{order.name}}</td>
          <td>{{order.items.length}}</td>
          <td><span class="glyphicon glyphicon-ok" ng-show="order.kitchen"></span></td>
+         <td>{{order.sent | bistroFromNow}}</td>
+         <td>{{order.processed | bistroFromNow}}</td>
          <td>{{order.updatedAt | bistroFromNow}}</td>
      </tr>
     </tbody>

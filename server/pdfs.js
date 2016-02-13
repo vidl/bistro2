@@ -124,7 +124,7 @@ module.exports = function(settings){
                 .stroke()
             doc.moveDown(1);
         }
-        doc.fontSize(14);
+        doc.fontSize(12);
         _.each(order.items, function (item) {
             if (item.article.kitchen) {
                 doc.text(item.count + 'x')

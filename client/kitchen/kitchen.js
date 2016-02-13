@@ -19,7 +19,7 @@
                 $http.get('/availability').success(function (data) {
                     $rootScope.$broadcast(eventName, data);
                 });
-                Order.query({state: 'sent', sort: 'no', populate: 'items.article'}, function(orders){
+                Order.query({state: 'sent', kitchen: true, sort: 'no', populate: 'items.article'}, function(orders){
                     $rootScope.$broadcast(orderEventName, orders);
                 });
             }

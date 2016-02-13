@@ -11,7 +11,7 @@ angular.module('bistro.date.filter',[])
     })
     .filter('bistroFromNow', function(){
         return function(date){
-            return moment(date).fromNow();
+            return date ? moment(date).fromNow() : '-';
         }
     })
 ;

@@ -60,7 +60,9 @@ module.exports = function(db){
             }],
             total: availableCurrenciesDefinition,
             kitchen: Boolean,
-            kitchenNotes: String
+            kitchenNotes: String,
+            sent: Date,
+            processed: Date
         }, {toObject: { virtuals: true }, toJSON: { virtuals: true }}),
         limit: new Schema({
             name: String,

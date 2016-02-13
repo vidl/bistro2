@@ -62,6 +62,11 @@ function addToBody(res){
 function setOrderState(state){
     return function(order){
         order.state = state;
+        if (state === 'sent') {
+            order.sent = new Date;
+        } else if (state === 'processed') {
+            order.processed = new Date;
+        }
         return order;
     };
 }
@@ -404,7 +409,13 @@ module.exports = function(dbConnection, disablePrinting, pdfSettings) {
                     return order;
                 }
             })
-            .then(setOrderState('sent'))
+            .then(function(order){
+                if (order.kitchen) {
+                    return setOrderState('sent')(order);
+                } else {
+                    return setOrderState('processed')(order)
+                }
+            })
             .then(saveDocument)
             .then(populate('items.article'))
             .then(function(order){
